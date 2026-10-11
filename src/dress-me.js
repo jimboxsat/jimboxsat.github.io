@@ -137,7 +137,12 @@ export function createDressMe(root, { onOpenInCanvas }) {
       const cur = sel[r.role] || '';
       const strip = $('.dm-strip', row);
       let target = null;
-      if (strip) $$('.dm-cell', strip).forEach(b => { const on = b.dataset.copy === '1' && b.dataset.id === cur; b.classList.toggle('sel', on); b.setAttribute('aria-selected', on); if (on) target = b; });
+      if (strip) $$('.dm-cell', strip).forEach(b => {
+        const on = b.dataset.id === cur;
+        b.classList.toggle('sel', on);
+        b.setAttribute('aria-selected', on && b.dataset.copy === '1');
+        if (on && b.dataset.copy === '1') target = b;
+      });
       const it = byId(sel[r.role]);
       $('.dm-name', row).textContent = it ? it.name : (strip ? 'None' : '');
       if (opts.scroll && strip && target) centerOn(strip, target, opts.instant);
@@ -234,7 +239,16 @@ export function createDressMe(root, { onOpenInCanvas }) {
   root.addEventListener('click', e => {
     if (e.target.closest('[data-go-closet]')) { root.dispatchEvent(new CustomEvent('goto-closet', { bubbles: true })); return; }
     const cell = e.target.closest('.dm-cell');
-    if (cell) { sel[cell.closest('.dm-row').dataset.role] = cell.dataset.id || null; paint({ scroll: true }); return; }
+    if (cell) {
+      const row = cell.closest('.dm-row'); const role = row.dataset.role;
+      const id = cell.dataset.id || null;
+      if (id !== sel[role]) { sel[role] = id; paint(); }
+      // Centre the piece you actually tapped, inside the copy you're looking at —
+      // never jump back to the first copy.
+      const strip = $('.dm-strip', row);
+      if (strip) centerOn(strip, cell, false);
+      return;
+    }
     const pin = e.target.closest('[data-pin]');
     if (pin) { const r = pin.dataset.pin; pinned[r] = !pinned[r]; paint(); return; }
     const dm = e.target.closest('[data-dm]');
