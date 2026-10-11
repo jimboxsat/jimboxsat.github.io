@@ -483,3 +483,15 @@ body[data-density="compact"] .grid:not(.dense):not(.outfits) { grid-template-col
   .dm-row-head { min-height: 24px; padding: 0 4px; }
   .dm-pin { width: 30px; height: 30px; }
 }
+
+/* Mobile: the whole Dress me screen fits without page scroll. The outfit rows are fixed to
+   the space between the top bar and the bottom nav; every tile stretches to fill its row, so
+   clothes always appear fully, and the mode switch + dice dock + color note stay visible. */
+@media (max-width: 900px) {
+  #ob-dress:not([hidden]) { height: calc(100dvh - 132px); min-height: 0; }
+  .dm-cell { height: 100%; aspect-ratio: auto; }
+  .dm-strip { --cw: min(36vw, 165px); }
+  .dm-dock { position: static; margin: 8px auto 0; padding: 8px 12px; gap: 10px; box-shadow: none; }
+  .dm-dice { width: 56px; height: 56px; } .dm-dice svg { width: 26px; height: 26px; }
+  .dm-note { margin: 6px 0 0; }
+}
