@@ -77,22 +77,21 @@ export function createDressMe(root, { onOpenInCanvas }) {
 
   // Scale every photo by its own pixels so they all look the same size: the longest side
   // of each image is mapped onto the same tile dimension, and it never overflows the tile.
+  // Runs again on every resize so tiles re-fill their (possibly changed) dimensions.
   function sizeRowImages() {
     for (const img of $$('.dm-cell img', root)) {
-      if (img.dataset.sized) continue;
       const set = () => {
         try {
           const nw = img.naturalWidth, nh = img.naturalHeight;
           if (!nw || !nh) return;
-          img.dataset.sized = '1';
           const cell = img.closest('.dm-cell'); if (!cell) return;
-          const inner = Math.max(1, Math.min(cell.clientWidth, cell.clientHeight) - 26);
+          const inner = Math.max(1, Math.min(cell.clientWidth, cell.clientHeight) - 14);
           const s = inner / Math.max(nw, nh);
           img.style.width = Math.round(nw * s) + 'px';
           img.style.height = Math.round(nh * s) + 'px';
         } catch { /* keep the default layout */ }
       };
-      if (img.complete && img.naturalWidth) set(); else img.addEventListener('load', set);
+      if (img.complete && img.naturalWidth) set(); else img.addEventListener('load', set, { once: true });
     }
   }
 
@@ -119,8 +118,15 @@ export function createDressMe(root, { onOpenInCanvas }) {
       <p class="dm-note muted small" aria-live="polite"></p></div>`;
   }
 
+  // suppressSettle stops settle() from interfering while we scroll programmatically,
+  // so an animation can never be teleported to another copy halfway through.
+  let suppressSettle = 0;
   function centerOn(strip, el, instant) {
+    suppressSettle++;
     strip.scrollTo({ left: el.offsetLeft + el.offsetWidth / 2 - strip.clientWidth / 2, behavior: instant ? 'auto' : 'smooth' });
+    const clear = () => { suppressSettle = Math.max(0, suppressSettle - 1); };
+    if ('onscrollend' in strip) strip.addEventListener('scrollend', clear, { once: true });
+    setTimeout(clear, instant ? 40 : 650);
   }
   function paint(opts = {}) {
     const m = mode();
@@ -142,18 +148,20 @@ export function createDressMe(root, { onOpenInCanvas }) {
   const timers = new WeakMap();
   root.addEventListener('scroll', e => {
     const strip = e.target; if (!strip.classList || !strip.classList.contains('dm-strip')) return;
+    if (suppressSettle) return;
     clearTimeout(timers.get(strip)); timers.set(strip, setTimeout(() => settle(strip), 120));
   }, true);
   function settle(strip) {
+    if (suppressSettle) return;
     const role = strip.closest('.dm-row').dataset.role;
     const cells = $$('.dm-cell', strip); if (!cells.length) return;
     const c = strip.scrollLeft + strip.clientWidth / 2; let best = null, d = Infinity;
     cells.forEach(b => { const x = Math.abs(b.offsetLeft + b.offsetWidth / 2 - c); if (x < d) { d = x; best = b; } });
     if (!best) return;
-    // Wrap: if the nearest cell sits in an outer copy (or at "None"), jump back to the middle copy
-    // so the strip keeps scrolling forever instead of hitting a dead end.
-    if (best !== cells[0] && best.dataset.copy !== '1') {
-      const eq = cells.find(b => b.dataset.copy === '1' && b.dataset.id === best.dataset.id);
+    // Keep the visible copy inside the middle so swiping wraps forever instead of dead-ending:
+    // if the nearest cell sits in an outer copy, hop to the identical middle copy cell.
+    if (best.dataset.copy !== '1') {
+      const eq = cells.find(b => b.dataset.copy === '1' && (b.dataset.id || '') === (best.dataset.id || ''));
       if (eq) { centerOn(strip, eq, true); return; }
     }
     if ((best.dataset.id || null) !== sel[role]) { sel[role] = best.dataset.id || null; paint(); }
@@ -247,14 +255,37 @@ export function createDressMe(root, { onOpenInCanvas }) {
     const ids = ['', ...pool[role].map(i => i.id)];
     const i = Math.max(0, ids.indexOf(sel[role] || ''));
     const last = ids.length - 1;
+    const fwd = e.key === 'ArrowRight';
+    // Logical neighbour with wrap: past the last item -> first item; before the first one -> "None"; before "None" -> last item.
     let n;
-    // Wrap endlessly: the last item rolls back to the first one (skipping "None", which only lives at the far left).
-    if (e.key === 'ArrowRight') n = i >= last ? 1 : i + 1;
+    if (fwd) n = i >= last ? 1 : i + 1;
     else n = i <= 1 ? (i === 1 ? 0 : last) : i - 1;
-    sel[role] = ids[n] || null; paint({ scroll: true }); e.preventDefault();
+    const id = ids[n] || '';
+    const cells = $$('.dm-cell', strip); if (!cells.length) { e.preventDefault(); return; }
+    // Which copy is currently on screen? Center there and only drift into the next copy on a wrap
+    // so every key press advances exactly one tile without a long teleport.
+    const c = strip.scrollLeft + strip.clientWidth / 2; let best = cells[0], d = Infinity;
+    for (const b of cells) { const x = Math.abs(b.offsetLeft + b.offsetWidth / 2 - c); if (x < d) { d = x; best = b; } }
+    const src = best.dataset.copy ? +best.dataset.copy : 1;
+    const wrapFwd = fwd && i === last;                 // last item -> first item
+    const wrapBack = !fwd && i === 0;                  // "None" -> last item
+    const tCopy = Math.max(0, Math.min(2, src + (wrapFwd ? 1 : wrapBack ? -1 : 0)));
+    let target = cells.find(b => +b.dataset.copy === tCopy && (b.dataset.id || '') === id);
+    if (!target) target = cells.find(b => (b.dataset.id || '') === id && +b.dataset.copy === 1);
+    if (!target) target = cells[0];
+    sel[role] = id || null;
+    centerOn(strip, target, wrapFwd || wrapBack);
+    paint();
+    e.preventDefault();
   });
 
   db.onChange(debounce(k => { if (k === 'items') load(); }, 80));
+  const reflow = debounce(() => {
+    sizeRowImages();
+    paint({ scroll: true, instant: true });
+  }, 150);
+  window.addEventListener('resize', reflow);
+  if ('orientationchange' in window) window.addEventListener('orientationchange', reflow);
   load();
   return { refresh: load, recenter: () => paint({ scroll: true, instant: true }) };
 }
