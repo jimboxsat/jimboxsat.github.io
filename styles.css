@@ -495,3 +495,7 @@ body[data-density="compact"] .grid:not(.dense):not(.outfits) { grid-template-col
   .dm-dice { width: 56px; height: 56px; } .dm-dice svg { width: 26px; height: 26px; }
   .dm-note { margin: 6px 0 0; }
 }
+
+/* The image-source bar has exactly four choices (Upload / Camera / URL / No image): keep it a
+   single even row so the last choice never wraps or leaves a gap next to it. */
+.img-pane .seg { grid-template-columns: repeat(4, 1fr); }

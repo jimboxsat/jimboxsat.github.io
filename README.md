@@ -61,7 +61,6 @@ Photos and outfits are kept in the browser's IndexedDB and survive closing and r
 
 ## Notes
 - Color match is a **local rule set** (neutrals go with anything, analogous pairs scored as softer, at most one bold accent), not AI.
-- Websites can't be embedded in another page, so web search opens in a new tab and you bring the image back as a screenshot.
 - Background removal only works well on a plain, uniform background (or transparent PNGs) — there's no AI cutout.
 
 ## Files
