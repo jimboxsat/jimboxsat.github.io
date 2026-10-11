@@ -443,6 +443,10 @@ body[data-density="compact"] .grid:not(.dense):not(.outfits) { grid-template-col
 @media (max-width: 900px) {
   .bottom-nav { grid-template-columns: repeat(2, 1fr); } .bottom-nav .nav-btn { padding: 12px 4px; font-size: 14px; }
   .choose-grid, .shot-grid { grid-template-columns: 1fr; } .choose-card { padding: 20px 18px; } .choose-card svg { width: 120px; height: 90px; }
+  .dm-row { position: relative; margin: 4px 0; }
+  .dm-row-head { display: block; height: 0; min-height: 0; padding: 0; }
+  .dm-label, .dm-name { display: none; }
+  .dm-pin { position: absolute; top: 6px; right: 6px; z-index: 3; box-shadow: var(--shadow); }
   .dm-strip { --cw: min(40vw, 150px); }
   .dm-dock { bottom: 82px; } .dm-dock .btn { min-height: 38px; }
   .dm-head h2 { font-size: 20px; }
@@ -461,7 +465,7 @@ body[data-density="compact"] .grid:not(.dense):not(.outfits) { grid-template-col
 .img-preview img { position: absolute; inset: 10px; width: calc(100% - 20px); height: calc(100% - 20px); padding: 0; }
 .toast.success { background: #3f6b4a; } .toast.error { background: #a63a32; }
 .dm-strip { --cw: clamp(96px, calc(((100dvh - 300px) / 3 - 60px) / 1.05), 300px); }
-@media (max-width: 900px) { .dm-strip { --cw: min(40vw, clamp(88px, calc(((100dvh - 340px) / 3 - 50px) / 1.05), 160px)); } }
+@media (max-width: 900px) { .dm-strip { --cw: min(40vw, clamp(96px, calc(((100dvh - 240px) / 3 - 24px) / 1.05), 190px)); } }
 
 /* Dress me fills the viewport height to the bottom on desktop */
 #ob-dress:not([hidden]) { display: flex; flex-direction: column; min-height: calc(100dvh - 132px); }

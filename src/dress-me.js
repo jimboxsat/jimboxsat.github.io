@@ -63,8 +63,10 @@ export function createDressMe(root, { onOpenInCanvas }) {
 
   function rowHtml(r) {
     const list = pool[r.role];
-    const cells = `<button class="dm-cell none" role="option" data-id="" aria-selected="false" aria-label="No ${r.one}">None</button>` +
-      list.map(i => `<button class="dm-cell" role="option" data-id="${i.id}" aria-selected="false" aria-label="${esc(i.name)}"><img src="${imgSrc(i)}" alt="" draggable="false"></button>`).join('');
+    const none = `<button class="dm-cell none" data-copy="1" role="option" data-id="" aria-selected="false" aria-label="No ${r.one}">None</button>`;
+    const itemCells = c => list.map(i => `<button class="dm-cell" data-copy="${c}" role="option" data-id="${i.id}" aria-selected="false" aria-label="${esc(i.name)}"><img src="${imgSrc(i)}" alt="" draggable="false"></button>`).join('');
+    // The items are repeated 3 times so swiping wraps around seamlessly; "None" lives at the far left.
+    const cells = none + itemCells(0) + itemCells(1) + itemCells(2);
     return `<section class="dm-row" data-role="${r.role}">
       <div class="dm-row-head"><span class="dm-label">${r.label}</span><span class="dm-name"></span>
         <button class="dm-pin" data-pin="${r.role}" aria-pressed="false" aria-label="Pin ${r.one} (the dice skips pinned rows)" title="Pin: the dice skips this row">${ICON.pin}</button></div>
@@ -129,7 +131,7 @@ export function createDressMe(root, { onOpenInCanvas }) {
       const cur = sel[r.role] || '';
       const strip = $('.dm-strip', row);
       let target = null;
-      if (strip) $$('.dm-cell', strip).forEach(b => { const on = b.dataset.id === cur; b.classList.toggle('sel', on); b.setAttribute('aria-selected', on); if (on) target = b; });
+      if (strip) $$('.dm-cell', strip).forEach(b => { const on = b.dataset.copy === '1' && b.dataset.id === cur; b.classList.toggle('sel', on); b.setAttribute('aria-selected', on); if (on) target = b; });
       const it = byId(sel[r.role]);
       $('.dm-name', row).textContent = it ? it.name : (strip ? 'None' : '');
       if (opts.scroll && strip && target) centerOn(strip, target, opts.instant);
@@ -144,9 +146,17 @@ export function createDressMe(root, { onOpenInCanvas }) {
   }, true);
   function settle(strip) {
     const role = strip.closest('.dm-row').dataset.role;
+    const cells = $$('.dm-cell', strip); if (!cells.length) return;
     const c = strip.scrollLeft + strip.clientWidth / 2; let best = null, d = Infinity;
-    $$('.dm-cell', strip).forEach(b => { const x = Math.abs(b.offsetLeft + b.offsetWidth / 2 - c); if (x < d) { d = x; best = b; } });
-    if (best && (best.dataset.id || null) !== sel[role]) { sel[role] = best.dataset.id || null; paint(); }
+    cells.forEach(b => { const x = Math.abs(b.offsetLeft + b.offsetWidth / 2 - c); if (x < d) { d = x; best = b; } });
+    if (!best) return;
+    // Wrap: if the nearest cell sits in an outer copy (or at "None"), jump back to the middle copy
+    // so the strip keeps scrolling forever instead of hitting a dead end.
+    if (best !== cells[0] && best.dataset.copy !== '1') {
+      const eq = cells.find(b => b.dataset.copy === '1' && b.dataset.id === best.dataset.id);
+      if (eq) { centerOn(strip, eq, true); return; }
+    }
+    if ((best.dataset.id || null) !== sel[role]) { sel[role] = best.dataset.id || null; paint(); }
   }
 
   function roll() {
@@ -236,7 +246,11 @@ export function createDressMe(root, { onOpenInCanvas }) {
     const role = strip.closest('.dm-row').dataset.role;
     const ids = ['', ...pool[role].map(i => i.id)];
     const i = Math.max(0, ids.indexOf(sel[role] || ''));
-    const n = Math.min(ids.length - 1, Math.max(0, i + (e.key === 'ArrowRight' ? 1 : -1)));
+    const last = ids.length - 1;
+    let n;
+    // Wrap endlessly: the last item rolls back to the first one (skipping "None", which only lives at the far left).
+    if (e.key === 'ArrowRight') n = i >= last ? 1 : i + 1;
+    else n = i <= 1 ? (i === 1 ? 0 : last) : i - 1;
     sel[role] = ids[n] || null; paint({ scroll: true }); e.preventDefault();
   });
 
