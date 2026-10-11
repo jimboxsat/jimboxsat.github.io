@@ -15,6 +15,9 @@ const ICON = {
   dice: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><circle cx="8.5" cy="8.5" r="1.1" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1.1" fill="currentColor"/><circle cx="12" cy="12" r="1.1" fill="currentColor"/><circle cx="8.5" cy="15.5" r="1.1" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.1" fill="currentColor"/></svg>',
   pin: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4h6l-1 6 3 3v1.5H7V13l3-3z"/><path d="M12 14.5V20"/></svg>'
 };
+// How many times each item's run is repeated in a strip. Enough copies (plus kutch(), below)
+// guarantee a swipe or an arrow walk can never hit a dead end, so the strip reads as endless.
+const COPIES = 7;
 
 // ---- Colour matching: local rules, nothing hidden ----
 const NEUTRAL = new Set(['Black', 'White', 'Grey', 'Beige', 'Cream', 'Navy', 'Brown']);
@@ -41,7 +44,7 @@ export function createDressMe(root, { onOpenInCanvas }) {
   const filters = newFilters();
   let items = [];
   const pool = { top: [], bottom: [], shoes: [] };
-  const sel = { top: undefined, bottom: undefined, shoes: undefined };   // undefined = not chosen yet, null = "None"
+  const sel = { top: undefined, bottom: undefined, shoes: undefined };   // undefined = not chosen yet
   const pinned = { top: false, bottom: false, shoes: false };
   const active = { top: 1, bottom: 1, shoes: 1 };                        // which strip copy holds the highlight and the centered view
   const mode = () => (db.settings.get('dressMode', 'random') === 'color' ? 'color' : 'random');
@@ -54,8 +57,9 @@ export function createDressMe(root, { onOpenInCanvas }) {
     for (const r of ROWS) pool[r.role] = live.filter(i => layoutRole(i) === r.role);
     for (const r of ROWS) {
       const list = pool[r.role], cur = sel[r.role];
-      const valid = cur === null || (cur !== undefined && list.some(i => i.id === cur));
-      // null means the user deliberately chose "None"; an empty pool stays undefined so a later load picks a piece
+      const valid = cur !== undefined && list.some(i => i.id === cur);
+      // a missing or stale pick falls back to a random piece; an empty pool stays undefined
+      // so a later load picks one instead of showing a gap
       if (!valid) sel[r.role] = list.length ? list[rand(list.length)].id : undefined;
     }
     build();
@@ -64,10 +68,10 @@ export function createDressMe(root, { onOpenInCanvas }) {
 
   function rowHtml(r) {
     const list = pool[r.role];
-    const none = `<button class="dm-cell none" data-copy="1" role="option" data-id="" aria-selected="false" aria-label="No ${r.one}">None</button>`;
     const itemCells = c => list.map(i => `<button class="dm-cell" data-copy="${c}" role="option" data-id="${i.id}" aria-selected="false" aria-label="${esc(i.name)}"><img src="${imgSrc(i)}" alt="" draggable="false"></button>`).join('');
-    // The items are repeated 3 times so swiping wraps around seamlessly; "None" lives at the far left.
-    const cells = none + itemCells(0) + itemCells(1) + itemCells(2);
+    // The items repeat across several copies so both ends always have runway; kutch()
+    // shifts the run invisibly as the view scrolls, making the strip feel endless.
+    const cells = Array.from({ length: COPIES }, (_, c) => itemCells(c)).join('');
     return `<section class="dm-row" data-role="${r.role}">
       <div class="dm-row-head"><span class="dm-label">${r.label}</span><span class="dm-name"></span>
         <button class="dm-pin" data-pin="${r.role}" aria-pressed="false" aria-label="Pin ${r.one} (the dice skips pinned rows)" title="Pin: the dice skips this row">${ICON.pin}</button></div>
@@ -126,9 +130,21 @@ export function createDressMe(root, { onOpenInCanvas }) {
   function centerOn(strip, el, instant) {
     suppressSettle++;
     strip.scrollTo({ left: el.offsetLeft + el.offsetWidth / 2 - strip.clientWidth / 2, behavior: instant ? 'auto' : 'smooth' });
-    const clear = () => { suppressSettle = Math.max(0, suppressSettle - 1); };
+    const clear = () => { suppressSettle = Math.max(0, suppressSettle - 1); kutch(strip); };
     if ('onscrollend' in strip) strip.addEventListener('scrollend', clear, { once: true });
     setTimeout(clear, instant ? 40 : 650);
+  }
+  // Invisible re-anchor at either end of the strip: the copies are identical, so nudging
+  // scrollLeft by exactly one run looks like nothing happened while the run underneath
+  // keeps looping. Only ever runs when nothing is being scrolled programmatically.
+  function kutch(strip) {
+    const cw = strip.scrollWidth / COPIES;
+    if (!cw || strip.clientWidth > cw) return;
+    const role = strip.closest('.dm-row').dataset.role;
+    if (strip.scrollLeft < cw) strip.scrollLeft += cw;
+    else if (strip.scrollLeft + strip.clientWidth > cw * (COPIES - 1)) strip.scrollLeft -= cw;
+    // Keep the highlight on whichever copy the viewport now sits in (clamped to the run).
+    active[role] = Math.min(COPIES - 1, Math.max(0, Math.round((strip.scrollLeft + strip.clientWidth / 2) / cw)));
   }
   function paint(opts = {}) {
     const m = mode();
@@ -136,7 +152,7 @@ export function createDressMe(root, { onOpenInCanvas }) {
     for (const r of ROWS) {
       const row = $(`.dm-row[data-role="${r.role}"]`, root); if (!row) continue;
       const pin = $('[data-pin]', row); pin.classList.toggle('on', !!pinned[r.role]); pin.setAttribute('aria-pressed', !!pinned[r.role]);
-const cur = sel[r.role] || '';
+      const cur = sel[r.role] || '';
       const strip = $('.dm-strip', row);
       // A programmatic scroll (dice, resize) always home in on the canonical copy.
       if (opts.scroll) active[r.role] = 1;
@@ -150,7 +166,7 @@ const cur = sel[r.role] || '';
         if (b.dataset.id === cur && b.dataset.copy === '1') target = b;
       });
       const it = byId(sel[r.role]);
-      $('.dm-name', row).textContent = it ? it.name : (strip ? 'None' : '');
+      $('.dm-name', row).textContent = it ? it.name : '';
       if (opts.scroll && strip && target) centerOn(strip, target, opts.instant);
     }
   }
@@ -160,6 +176,7 @@ const cur = sel[r.role] || '';
   root.addEventListener('scroll', e => {
     const strip = e.target; if (!strip.classList || !strip.classList.contains('dm-strip')) return;
     if (suppressSettle) return;
+    kutch(strip);
     clearTimeout(timers.get(strip)); timers.set(strip, setTimeout(() => settle(strip), 120));
   }, true);
   function settle(strip) {
@@ -169,13 +186,11 @@ const cur = sel[r.role] || '';
     const c = strip.scrollLeft + strip.clientWidth / 2; let best = null, d = Infinity;
     cells.forEach(b => { const x = Math.abs(b.offsetLeft + b.offsetWidth / 2 - c); if (x < d) { d = x; best = b; } });
     if (!best) return;
-    // Keep the visible copy inside the middle so swiping wraps forever instead of dead-ending:
-    // if the nearest cell sits in an outer copy, hop to the identical middle copy cell.
-    if (best.dataset.copy !== '1') {
-      const eq = cells.find(b => b.dataset.copy === '1' && (b.dataset.id || '') === (best.dataset.id || ''));
-      if (eq) { active[role] = 1; centerOn(strip, eq, true); return; }
-    }
-    if ((best.dataset.id || null) !== sel[role]) { active[role] = 1; sel[role] = best.dataset.id || null; paint(); }
+    // Wherever the swipe stopped is the pick; the closest copy of that item is highlighted.
+    active[role] = Number(best.dataset.copy);
+    const id = best.dataset.id || null;
+    if (id !== sel[role]) { sel[role] = id; }
+    paint();
   }
 
   function roll() {
@@ -249,19 +264,11 @@ const cur = sel[r.role] || '';
       const row = cell.closest('.dm-row'); const role = row.dataset.role;
       const id = cell.dataset.id || null;
       const strip = $('.dm-strip', row);
+      active[role] = Number(cell.dataset.copy);
       if (id !== sel[role]) { sel[role] = id; }
-      // Tapping an outer copy re-anchors onto the same logical item in the canonical
-      // copy: the piece you tapped stays centred (an instant, seam-crossing swap) so
-      // the highlight can't sit in a duplicate copy.
-      if (cell.dataset.copy !== '1') {
-        active[role] = 1;
-        const eq = $$('.dm-cell', strip).find(b => b.dataset.copy === '1' && (b.dataset.id || '') === id);
-        paint();
-        if (eq) centerOn(strip, eq, true);
-      } else {
-        paint();
-        if (strip) centerOn(strip, cell, false);
-      }
+      paint();
+      // Centre the piece you actually tapped, inside the copy you're looking at.
+      if (strip) centerOn(strip, cell, false);
       return;
     }
     const pin = e.target.closest('[data-pin]');
@@ -281,37 +288,26 @@ const cur = sel[r.role] || '';
     const strip = e.target.closest && e.target.closest('.dm-strip');
     if (!strip || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return;
     const role = strip.closest('.dm-row').dataset.role;
-    const ids = ['', ...pool[role].map(i => i.id)];
-    const i = Math.max(0, ids.indexOf(sel[role] || ''));
-    const last = ids.length - 1;
+    const list = pool[role]; if (!list.length) return;
+    const ids = list.map(i => i.id);
+    const i0 = Math.max(0, ids.indexOf(sel[role]));
     const fwd = e.key === 'ArrowRight';
+    const id = ids[(i0 + (fwd ? 1 : -1) + ids.length) % ids.length];
     const cells = $$('.dm-cell', strip); if (!cells.length) { e.preventDefault(); return; }
-    // The active copy is where the highlight sits; treat it as "where we are" so each
-    // press advances exactly one tile. Stepping across the copy seams keeps the ring
-    // infinite: in the leftmost area I0's left is "None", everywhere else it wraps
-    // to the last item, and "None" wraps left to the last item too.
-    const src = +active[role] || 1;
-    let n;
-    if (fwd) n = i >= last ? 1 : i + 1;
-    else if (i === 1) n = src === 0 ? 0 : last;   // I0: at copy 0 -> None, else ring-wrap to last item
-    else if (i === 0) n = last;                   // None -> last item
-    else n = i - 1;
-    const id = ids[n] || '';
-    // Which copy does the landed item live in? Keep the current one for ordinary steps,
-    // drift into the next copy on a wrap, and snap back to canonical when a wrap or the
-    // single "None" cell would leave the strip.
-    let tCopy = src;
-    if (i === last && fwd) tCopy = src + 1;                       // last item -> I0 in the next copy
-    else if (i === 0) tCopy = src - 1;                            // None -> last item in the previous copy
-    else if (i === 1 && !fwd && src !== 0) tCopy = src - 1;       // I0 -> last item in the previous copy
-    if (tCopy > 2 || tCopy < 0) tCopy = 1;                        // clamp past the copies back to canonical
-    let target = cells.find(b => +b.dataset.copy === tCopy && (b.dataset.id || '') === id);
-    if (!target) target = cells.find(b => (b.dataset.id || '') === id && +b.dataset.copy === 1);
+    // Walk the item ring and glide to the nearest copy of the next item: crossing the
+    // last<->first seam is just one tile because the copies sit adjacent to each other,
+    // so there is never a teleport, only a short smooth scroll.
+    const c = strip.scrollLeft + strip.clientWidth / 2;
+    let target = null, d = Infinity;
+    for (const b of cells) {
+      if ((b.dataset.id || '') !== id) continue;
+      const x = Math.abs(b.offsetLeft + b.offsetWidth / 2 - c);
+      if (x < d) { d = x; target = b; }
+    }
     if (!target) target = cells[0];
-    active[role] = +target.dataset.copy || 1;
-    sel[role] = id || null;
-    // Crossing copies is a seam: snap there instantly instead of gliding the whole strip.
-    centerOn(strip, target, +target.dataset.copy !== src);
+    active[role] = Number(target.dataset.copy);
+    sel[role] = id;
+    centerOn(strip, target, false);
     paint();
     e.preventDefault();
   });

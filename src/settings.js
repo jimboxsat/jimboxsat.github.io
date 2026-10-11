@@ -115,7 +115,7 @@ export function createSettings(root, { onRemoveDemo } = {}) {
 
       <section class="s-card">${sTitle(sIco(icons.question), 'Help')}
         <details><summary>Canvas controls</summary><p class="muted small">Drag a piece to move it and drag the round handle to resize. With a piece focused: arrow keys nudge (Shift for bigger steps), + and − resize, R rotates, [ and ] change layers, Delete removes. Pin a piece to keep it when you press Shuffle.</p></details>
-        <details><summary>Dress me tips</summary><p class="muted small">Swipe a row, or press ← and → on it. The piece in the middle is the chosen one, or pick None. Pin a row so the dice skips it. Color match works best when your items have colors.</p></details>
+        <details><summary>Dress me tips</summary><p class="muted small">Swipe a row, or press ← and → on it. The piece in the middle is the chosen one. Pin a row so the dice skips it. Color match works best when your items have colors.</p></details>
         <details><summary>Adding items from the web</summary><p class="muted small">In the item form, choose Upload and paste or drop a screenshot of the item — it opens in the crop view. Search the web in a new tab, screenshot the item, and paste it here.</p></details>
       </section>
 
