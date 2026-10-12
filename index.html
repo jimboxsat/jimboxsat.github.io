@@ -6,6 +6,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
 <title>Atelier - A Digital Closet</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="favicon.png">
+<meta name="theme-color" content="#f7f4ee" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#151412" media="(prefers-color-scheme: dark)">
 <script>try{var t=JSON.parse(localStorage.getItem('atelier:theme')||'"system"');var d=t==='dark'||(t==='system'&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.dataset.theme=d?'dark':'light';document.documentElement.style.colorScheme=d?'dark':'light'}catch(e){}</script>
 <link rel="stylesheet" href="styles.css">
 </head>
@@ -13,7 +17,7 @@
 <a class="skip" href="#main">Skip to content</a>
 <div id="app">
   <header class="topbar">
-    <div class="brand"><span class="brand-mark" aria-hidden="true">a</span><span class="brand-name">Atelier</span></div>
+    <div class="brand"><img class="brand-mark" src="favicon.png" alt="" aria-hidden="true" width="32" height="32"><span class="brand-name">Atelier</span></div>
     <nav class="nav" aria-label="Main">
       <button class="nav-btn" data-view="closet" aria-current="page">Closet</button>
       <button class="nav-btn" data-view="outfits">Outfit Builder</button>

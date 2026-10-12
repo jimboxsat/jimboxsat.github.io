@@ -23,6 +23,7 @@ const CODE = {
   95: ['Thunderstorm', '⛈️'], 96: ['Thunderstorm', '⛈️'], 99: ['Thunderstorm', '⛈️']
 };
 const codeInfo = c => CODE[Number(c)] || ['—', '🌡️'];
+export const describe = code => codeInfo(code); // -> [label, icon]
 
 const readers = new Set();
 const emit = () => readers.forEach(fn => { try { fn(); } catch { /* ignore */ } });
@@ -34,7 +35,19 @@ export const setCity = c => { db.settings.set('weatherCity', c); emit(); };
 export const onWeatherChange = fn => { readers.add(fn); return () => readers.delete(fn); };
 
 let last = null; // { label, ico, temp } of the most recent forecast, for the compact chip
+let lastData = null; // full { current, days } forecast, for other views (e.g. Dress me)
+let lastDataCity = null;
 export const summary = () => last;
+export const forecast = () => lastData;
+
+// Fetches (or reads the cache) for the chosen city when weather is on, so other
+// views can render a forecast without managing the network themselves.
+export async function ensure() {
+  if (!enabled()) return null;
+  const c = city(); if (!c) return null;
+  if (lastData && lastDataCity === c.label) return lastData;
+  try { return await fetchForecast(c); } catch { return lastData; }
+}
 
 const shortPlace = label => (label || '').split(',')[0].trim();
 
@@ -56,7 +69,7 @@ function cacheSet(c, data) { try { localStorage.setItem(CACHE_KEY, JSON.stringif
 
 export async function fetchForecast(c) {
   const hit = cacheGet(c);
-  if (hit) { last = { label: c.label, ico: codeInfo(hit.current.code)[1], temp: hit.current.temp }; return hit; }
+  if (hit) { last = { label: c.label, ico: codeInfo(hit.current.code)[1], temp: hit.current.temp }; lastData = hit; lastDataCity = c.label; return hit; }
   const url = `${FC}?latitude=${c.latitude}&longitude=${c.longitude}&current=temperature_2m,apparent_temperature,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min&timezone=auto&forecast_days=4`;
   const r = await fetch(url);
   if (!r.ok) throw new Error('Weather is unavailable right now.');
@@ -66,6 +79,8 @@ export async function fetchForecast(c) {
     days: (d.daily.time || []).map((t, i) => ({ date: t, code: d.daily.weather_code[i], min: Math.round(d.daily.temperature_2m_min[i]), max: Math.round(d.daily.temperature_2m_max[i]) }))
   };
   last = { label: c.label, ico: codeInfo(data.current.code)[1], temp: data.current.temp };
+  lastData = data;
+  lastDataCity = c.label;
   cacheSet(c, data);
   return data;
 }

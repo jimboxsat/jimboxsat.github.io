@@ -5,6 +5,7 @@ import { esc, $, $$, icons, toast, openModal, debounce } from './components.js';
 import { newFilters, activeCount, applyFilters, openFilterPanel } from './filters.js';
 import { imgSrc, blobToImage, loadImage } from './image-utils.js';
 import { defaultBox, ROLE_LAYER } from './outfit-builder.js';
+import * as weather from './weather.js';
 
 const ROWS = [
   { role: 'top', label: 'Tops', one: 'tops' },
@@ -48,6 +49,7 @@ export function createDressMe(root, { onOpenInCanvas }) {
   const pinned = { top: false, bottom: false, shoes: false };
   const active = { top: 1, bottom: 1, shoes: 1 };                        // which strip copy holds the highlight and the centered view
   const mode = () => (db.settings.get('dressMode', 'random') === 'color' ? 'color' : 'random');
+  let wxDay = 'today';   // which forecast day the header readout shows
   const byId = id => items.find(i => i.id === id) || null;
   const selected = () => ROWS.map(r => byId(sel[r.role])).filter(Boolean);
 
@@ -63,6 +65,8 @@ export function createDressMe(root, { onOpenInCanvas }) {
       if (!valid) sel[r.role] = list.length ? list[rand(list.length)].id : undefined;
     }
     build();
+    paintWeather();
+    weather.ensure().then(() => paintWeather());
     requestAnimationFrame(() => { sizeRowImages(); paint({ scroll: true, instant: true }); });
   }
 
@@ -100,6 +104,23 @@ export function createDressMe(root, { onOpenInCanvas }) {
     }
   }
 
+  function wxHtml() {
+    if (!weather.enabled() || !weather.city()) return '';
+    return '<div class="dm-wx" id="dm-wx" aria-live="polite"></div>';
+  }
+  function paintWeather() {
+    const el = $('#dm-wx', root); if (!el) return;
+    const f = weather.forecast();
+    const day = f && f.days && f.days.length >= 2 ? f.days[wxDay === 'tomorrow' ? 1 : 0] : null;
+    const seg = `<div class="dm-wx-seg" role="group" aria-label="Forecast day">
+        <button type="button" data-wxday="today" class="${wxDay === 'today' ? 'active' : ''}">Today</button>
+        <button type="button" data-wxday="tomorrow" class="${wxDay === 'tomorrow' ? 'active' : ''}">Tomorrow</button>
+      </div>`;
+    if (!day) { el.innerHTML = `${seg}<span class="dm-wx-cond muted">Weather…</span>`; return; }
+    const [cond, ico] = weather.describe(day.code);
+    el.innerHTML = `${seg}<div class="dm-wx-info"><span class="dm-wx-ico">${ico}</span><span class="dm-wx-cond">${cond}</span><span class="dm-wx-temp">${day.min}°–${day.max}°</span></div>`;
+  }
+
   function build() {
     const have = items.some(i => !i.archived && ROWS.some(r => layoutRole(i) === r.role));
     for (const r of ROWS) active[r.role] = 1;
@@ -115,6 +136,7 @@ export function createDressMe(root, { onOpenInCanvas }) {
         <h2>Dress me</h2>
         <button class="dm-save" data-save>Save</button>
       </div>
+      ${wxHtml()}
       ${ROWS.map(rowHtml).join('')}
       <div class="dm-dock">
         <div class="seg two" role="group" aria-label="Dice mode"><button class="seg-btn" data-dm="random">Random</button><button class="seg-btn" data-dm="color">Color match</button></div>
@@ -259,6 +281,8 @@ export function createDressMe(root, { onOpenInCanvas }) {
 
   root.addEventListener('click', e => {
     if (e.target.closest('[data-go-closet]')) { root.dispatchEvent(new CustomEvent('goto-closet', { bubbles: true })); return; }
+    const wxBtn = e.target.closest('[data-wxday]');
+    if (wxBtn) { wxDay = wxBtn.dataset.wxday; paintWeather(); return; }
     const cell = e.target.closest('.dm-cell');
     if (cell) {
       const row = cell.closest('.dm-row'); const role = row.dataset.role;
@@ -313,6 +337,7 @@ export function createDressMe(root, { onOpenInCanvas }) {
   });
 
   db.onChange(debounce(k => { if (k === 'items') load(); }, 80));
+  weather.onWeatherChange(() => { if ($('#dm-wx', root)) paintWeather(); });
   const reflow = debounce(() => {
     sizeRowImages();
     paint({ scroll: true, instant: true });

@@ -35,7 +35,7 @@ h1 { font-size: 30px; }
 /* layout */
 .topbar { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 24px; padding: 12px 28px; background: rgba(247,244,238,.92); backdrop-filter: blur(10px); border-bottom: 1px solid var(--line); }
 .brand { display: flex; align-items: center; gap: 10px; }
-.brand-mark { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 10px; background: var(--text); color: #fff; font-family: "Atelier Logo", var(--serif); font-weight: normal; font-size: 18px; }
+.brand-mark { width: 32px; height: 32px; border-radius: 9px; object-fit: contain; flex: none; }
 .brand-name { font-family: "Atelier Logo", var(--serif); font-size: 22px; font-weight: normal; }
 .nav { display: flex; gap: 4px; margin-left: 12px; }
 .nav-btn { border: 0; background: transparent; padding: 8px 16px; border-radius: 999px; color: var(--muted); font-weight: 500; transition: color .15s, background .15s, box-shadow .2s; }
@@ -339,6 +339,14 @@ body[data-density="compact"] .grid:not(.dense):not(.outfits) { grid-template-col
 .dm-round .badge-count { position: absolute; top: -4px; right: -4px; background: var(--accent); color: var(--accent-ink); }
 .dm-save { border: 0; border-radius: 12px; background: var(--accent); color: var(--accent-ink); font-weight: 700; padding: 11px 22px; }
 .dm-save:hover { filter: brightness(.95); }
+.dm-wx { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 2px 0 14px; padding: 8px 10px; background: var(--surface-2); border: 1px solid var(--line); border-radius: 14px; }
+.dm-wx-seg { display: inline-flex; background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 2px; }
+.dm-wx-seg button { border: 0; background: none; color: var(--muted); font-weight: 600; font-size: 12.5px; padding: 5px 12px; border-radius: 999px; cursor: pointer; }
+.dm-wx-seg button.active { background: var(--text); color: var(--text-ink); }
+.dm-wx-info { display: inline-flex; align-items: center; gap: 8px; min-width: 0; }
+.dm-wx-ico { font-size: 18px; line-height: 1; }
+.dm-wx-cond { font-weight: 500; }
+.dm-wx-temp { font-variant-numeric: tabular-nums; color: var(--muted); }
 .dm-row { margin: 4px 0 12px; }
 .dm-row-head { display: flex; align-items: center; gap: 10px; padding: 0 4px; min-height: 34px; }
 .dm-label { font-size: 12px; text-transform: uppercase; letter-spacing: .07em; font-weight: 700; color: var(--muted); }
@@ -431,7 +439,7 @@ body[data-density="compact"] .grid:not(.dense):not(.outfits) { grid-template-col
 [data-theme="dark"] .dropzone { border-color: #4a453c; }
 [data-theme="dark"] .img-preview, [data-theme="dark"] .tag-input { border-color: #4a453c; }
 [data-theme="dark"] .stage-wrap { background: #24211e; }
-.nav-btn[aria-current="page"], .brand-mark, .chip.active, .sel-mark svg, .btn[aria-pressed="true"] { color: var(--text-ink); }
+.nav-btn[aria-current="page"], .chip.active, .sel-mark svg, .btn[aria-pressed="true"] { color: var(--text-ink); }
 .sel-mark svg { stroke: var(--text-ink); }
 .toast { color: var(--text-ink); } .toast.error, .toast.success { color: #fff; }
 .handle { background: #1f1f21; } .piece.selected { outline-color: #1f1f21; }
@@ -471,7 +479,7 @@ body[data-density="compact"] .grid:not(.dense):not(.outfits) { grid-template-col
 #ob-dress .mode-bar { flex: none; }
 #dress-root { display: flex; flex-direction: column; flex: 1; min-height: 0; }
 .dm { flex: 1; width: 100%; max-width: none; margin: 0 auto; display: flex; flex-direction: column; min-height: 0; padding: 0 4px; }
-.dm-head, .dm-note { flex: none; }
+.dm-head, .dm-note, .dm-wx { flex: none; }
 .dm-row { display: flex; flex-direction: column; flex: 1; min-height: 0; margin: 6px 0; }
 .dm-row .dm-strip { flex: 1; min-height: 0; align-items: center; }
 .dm-dock { bottom: 8px; }
@@ -494,6 +502,8 @@ body[data-density="compact"] .grid:not(.dense):not(.outfits) { grid-template-col
   .dm-dock { position: static; margin: 8px auto 0; padding: 8px 12px; gap: 10px; box-shadow: none; }
   .dm-dice { width: 56px; height: 56px; } .dm-dice svg { width: 26px; height: 26px; }
   .dm-note { margin: 6px 0 0; }
+  .dm-wx { margin: 0 0 8px; padding: 6px 8px; gap: 8px; }
+  .dm-wx-seg button { padding: 5px 10px; }
 }
 
 /* The image-source bar has exactly four choices (Upload / Camera / URL / No image): keep it a
