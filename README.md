@@ -7,7 +7,7 @@ Version: **alpha 0.4.0**
 ## Features
 
 ### Closet
-- Collapsible **Home** strip at the top: a greeting with your name, live item/outfit counts, quick links to Add item / Dress me / Canvas, and an optional **weather widget** (current conditions + the next 3 days for your city, via Open-Meteo — no account, cached for offline use).
+- Collapsible **Home** strip at the top: a big time-of-day greeting (with your name, if you set one), a weather chip on the right that opens a **drop-down** with the current conditions and the next 3 days, and a shortcut row (Add item / Dress me / Canvas).
 - Card grid of your clothes with category tabs and subcategory navigation.
 - Search by name, brand, color or tag; filter by colors, brands, seasons, occasions, tags and favorites (with removable filter pills and an active-filter count).
 - Favorite any item with a tap on its star.

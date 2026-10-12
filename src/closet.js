@@ -7,32 +7,27 @@ import * as weather from './weather.js';
 
 export function createCloset(root, { onAddToOutfit, onLoadDemo, onRemoveDemo, onOpenDressMe, onOpenCanvas }) {
   const filters = newFilters();
-  let items = [], outfits = [];
+  let items = [];
   let loaded = false, error = null, viewing = false;
   const selected = new Set();
 
   root.innerHTML = `
     <div class="home-strip" id="home-strip">
-      <div class="home-bar" id="home-bar" role="button" tabindex="0" aria-expanded="false">
-        <span class="home-greet"><strong id="home-greet"></strong><span class="muted small" id="home-count"></span></span>
-        <span class="home-side">
+      <div class="home-bar">
+        <strong class="home-greet" id="home-greet"></strong>
+        <span class="home-actions">
           <button class="home-weather-chip" id="home-weather" type="button">＋ Weather</button>
-          <span class="home-chev" id="home-chev" aria-hidden="true">▾</span>
+          <button class="home-chev" id="home-chev" title="Show or hide shortcuts" aria-label="Show or hide shortcuts" aria-expanded="true">▾</button>
         </span>
       </div>
       <div class="home-body" id="home-body">
-        <div class="home-nick" id="home-nick" hidden>
-          <strong>What should we call you?</strong>
-          <p class="muted small">Only used in the greeting at the top of this page.</p>
-          <div class="inline-field"><input id="home-nick-in" maxlength="30" placeholder="Your name or nickname" aria-label="Your name or nickname" autocomplete="nickname"><button class="btn small" id="home-nick-save">Save</button><button class="link" id="home-nick-skip">Not now</button></div>
-        </div>
-        <div class="home-forecast" id="home-forecast"></div>
         <div class="home-shortcuts">
-          <button class="btn ghost" data-home-short="add">${icons.plus}<span>Add item</span></button>
+          <button class="btn primary" data-home-short="add">${icons.plus}<span>Add item</span></button>
           <button class="btn ghost" data-home-short="dress">Dress me</button>
           <button class="btn ghost" data-home-short="canvas">Canvas</button>
         </div>
       </div>
+      <div class="home-dropdown" id="home-dropdown" hidden></div>
     </div>
     <div class="page-head">
       <div><h1>My Closet</h1><p class="muted" id="cl-count" aria-live="polite"></p></div>
@@ -51,7 +46,7 @@ export function createCloset(root, { onAddToOutfit, onLoadDemo, onRemoveDemo, on
   const grid = $('#cl-grid', root), stateEl = $('#cl-state', root);
 
   async function load() {
-    try { [items, outfits] = await Promise.all([db.getItems(), db.getOutfits()]); error = null; }
+    try { items = await db.getItems(); error = null; }
     catch (e) { console.error(e); error = e; }
     loaded = true;
     pruneUrlCache(new Set(items.map(i => i.id)));
@@ -156,16 +151,11 @@ export function createCloset(root, { onAddToOutfit, onLoadDemo, onRemoveDemo, on
 
   function renderHome() {
     const open = !db.settings.get('homeCollapsed', false);
-    const body = $('#home-body', root), bar = $('#home-bar', root);
+    const body = $('#home-body', root), chev = $('#home-chev', root);
     body.hidden = !open;
-    bar.setAttribute('aria-expanded', String(open));
-    const cv = $('#home-chev', root); if (cv) cv.textContent = open ? '▾' : '▸';
+    chev.setAttribute('aria-expanded', String(open));
+    chev.textContent = open ? '▾' : '▸';
     $('#home-greet', root).textContent = greet();
-    $('#home-count', root).textContent = loaded
-      ? `${items.length} item${items.length === 1 ? '' : 's'} · ${outfits.length} outfit${outfits.length === 1 ? '' : 's'}`
-      : '';
-    const p = db.getProfile();
-    $('#home-nick', root).hidden = !!(p.nickname) || db.settings.get('nicknameSkipped', false);
     renderChip();
   }
 
@@ -178,28 +168,11 @@ export function createCloset(root, { onAddToOutfit, onLoadDemo, onRemoveDemo, on
     chip.title = `Weather in ${c.label}. Tap for the next 3 days.`;
   }
 
-  function toggleHome() {
-    db.settings.set('homeCollapsed', !db.settings.get('homeCollapsed', false));
-    renderHome();
-  }
-  function expandHome() {
-    if (db.settings.get('homeCollapsed', false)) { db.settings.set('homeCollapsed', false); renderHome(); }
-  }
-
   function wireHome() {
-    const bar = $('#home-bar', root);
-    bar.onclick = e => { if (e.target.closest('#home-weather')) return; toggleHome(); };
-    bar.onkeydown = e => { if (e.target && e.target.closest('#home-weather')) return; if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleHome(); } };
-
-    $('#home-nick-save', root).onclick = () => {
-      const v = $('#home-nick-in', root).value.trim();
-      if (!v) { toast('Enter a name or press “Not now”.', 'info'); return; }
-      db.setProfile({ nickname: v });
-      db.settings.set('nicknameSkipped', false);
+    $('#home-chev', root).onclick = () => {
+      db.settings.set('homeCollapsed', !db.settings.get('homeCollapsed', false));
       renderHome();
-      toast('Nice to meet you!', 'success');
     };
-    $('#home-nick-skip', root).onclick = () => { db.settings.set('nicknameSkipped', true); renderHome(); };
 
     $$('[data-home-short]', root).forEach(btn => btn.onclick = () => {
       const k = btn.dataset.homeShort;
@@ -208,14 +181,8 @@ export function createCloset(root, { onAddToOutfit, onLoadDemo, onRemoveDemo, on
       else if (k === 'canvas' && onOpenCanvas) onOpenCanvas();
     });
 
-    const weatherWidget = weather.mountWeather($('#home-forecast', root));
-    const homeChip = $('#home-weather', root);
+    const weatherWidget = weather.mountWeather({ host: $('#home-dropdown', root), chip: $('#home-weather', root) });
     weather.onWeatherChange(() => { renderChip(); weatherWidget.refresh(); });
-    homeChip.onclick = () => {
-      if (!weather.enabled()) { weather.setEnabled(true); expandHome(); return; }
-      expandHome();
-      requestAnimationFrame(() => weatherWidget.showDays());
-    };
   }
   wireHome();
 
@@ -287,9 +254,7 @@ export function createCloset(root, { onAddToOutfit, onLoadDemo, onRemoveDemo, on
 
   db.onChange(k => {
     if (k === 'items') load();
-    else if (k === 'outfits' || k === 'profile') {
-      db.getOutfits().then(o => { outfits = o; renderHome(); }).catch(() => {});
-    }
+    else if (k === 'profile') renderHome();
   });
   load();
   return { add, refresh: load, getItems: () => items };

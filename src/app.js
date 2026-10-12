@@ -95,7 +95,6 @@ function openBuilder() {
 }
 $$('.nav-btn').forEach(b => b.onclick = () => (b.dataset.view === 'outfits' ? openBuilder() : showView(b.dataset.view)));
 settingsBtn.onclick = () => showView('settings');
-$('#addItemBtn').onclick = () => { showView('closet'); closet.add(); };
 views.outfits.addEventListener('goto-closet', () => showView('closet'));
 
 // ---------- first launch ----------

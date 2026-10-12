@@ -1,4 +1,6 @@
 // Weather widget: free Open-Meteo API (no key), forecast cached 30 minutes for offline use.
+// UI is one chip in the home bar; clicking it opens a small dropdown with the current
+// conditions and the next 3 days. "Widgets" live only in that dropdown.
 import * as db from './database.js';
 import { esc, toast } from './components.js';
 
@@ -68,41 +70,47 @@ export async function fetchForecast(c) {
 
 const dayName = t => { try { return new Date(t + 'T12:00').toLocaleDateString(undefined, { weekday: 'short' }); } catch { return ''; } };
 
-export function mountWeather(panel) {
-  if (!panel) return { refresh: () => {}, showDays: () => {} };
+// Renders into `host` (an empty dropdown container next to the bar) and keeps `chip`
+// (the button in the bar) in sync. Toggling the chip opens/closes the dropdown.
+export function mountWeather({ host, chip }) {
+  if (!host) return { refresh: () => {}, close: () => {} };
   let open = false;
 
-  function toggleDays() {
-    open = !open;
-    const main = panel.querySelector('[data-w]');
-    if (main) { main.setAttribute('aria-expanded', String(open)); const c = main.querySelector('.w-car'); if (c) c.textContent = open ? '▴' : '▾'; }
-    const days = panel.querySelector('.w-days');
-    if (days) days.hidden = !open;
+  function setOpen(v) {
+    open = v;
+    host.hidden = !v;
+    if (chip) {
+      chip.classList.toggle('on', v);
+      chip.setAttribute('aria-expanded', String(v));
+    }
   }
+  const close = () => setOpen(false);
+  const openDrop = () => { setOpen(true); refresh(); };
 
   function draw(data) {
     const [cLabel, cIco] = codeInfo(data.current.code);
     const c = city(); const label = c ? c.label : '';
-    panel.innerHTML = `<button class="w-main" type="button" data-w aria-expanded="${open}" title="Tap for the next 3 days">
+    host.innerHTML = `<div class="w-dd-head">
         <span class="w-ico">${cIco}</span><span class="w-cur"><b>${data.current.temp}°</b><span>${cLabel}</span></span>
-        <span class="w-city">${esc(label)}</span><span class="w-car" aria-hidden="true">${open ? '▴' : '▾'}</span>
-      </button>
-      <div class="w-days" ${open ? '' : 'hidden'}>
+        <span class="w-city">${esc(label)}</span>
+        <button type="button" class="w-dd-close" data-close aria-label="Close weather">×</button>
+      </div>
+      <div class="w-days">
         ${data.days.map((d, i) => `<div class="w-day${i === 0 ? ' today' : ''}"><span class="w-day-name">${i === 0 ? 'Today' : dayName(d.date)}</span><span class="w-day-ico">${codeInfo(d.code)[1]}</span><span class="w-day-temp"><b>${d.max}°</b><s>${d.min}°</s></span></div>`).join('')}
-        <p class="muted small w-note">Feels like ${data.current.feels}° in ${esc(label)}.</p>
-      </div>`;
-    panel.querySelector('[data-w]').onclick = toggleDays;
+      </div>
+      <p class="muted small w-note">Feels like ${data.current.feels}° in ${esc(label)}.</p>`;
   }
 
   function fail(msg) {
     const c = city();
-    panel.innerHTML = `<button class="w-main w-err" type="button" data-w title="Tap to retry"><span class="w-ico">⚠️</span><span class="w-cur"><b>—</b><span>${esc(msg)}</span></span><span class="w-city">${esc(c ? c.label : '')}</span></button>`;
-    panel.querySelector('[data-w]').onclick = refresh;
+    host.innerHTML = `<div class="w-dd-head"><span class="w-ico">⚠️</span><span class="w-cur"><b>—</b><span>${esc(msg)}</span></span><span class="w-city">${esc(c ? c.label : '')}</span></div>
+      <p class="muted small w-note"><button class="link" data-retry>Try again</button></p>`;
+    host.querySelector('[data-retry]').onclick = refresh;
   }
 
   async function load() {
     const c = city(); if (!c) return;
-    panel.innerHTML = `<button class="w-main" type="button" data-w disabled><span class="w-ico">🕐</span><span class="w-cur"><b>…</b><span>Loading weather</span></span><span class="w-city">${esc(c.label)}</span></button>`;
+    host.innerHTML = `<div class="w-dd-head"><span class="w-ico">🕐</span><span class="w-cur"><b>…</b><span>Loading weather</span></span><span class="w-city">${esc(c.label)}</span></div>`;
     try {
       const before = summary();
       const data = await fetchForecast(c);
@@ -117,8 +125,9 @@ export function mountWeather(panel) {
   }
 
   function drawSetup() {
-    panel.innerHTML = `<div class="w-set"><span class="muted small">Weather by city:</span><div class="inline-field"><input id="wCityIn" placeholder="City name…" aria-label="Weather city" maxlength="60"><button class="btn small" id="wCityGo">Set</button></div></div>`;
-    const inp = panel.querySelector('#wCityIn'), go = panel.querySelector('#wCityGo');
+    host.innerHTML = `<strong class="w-set-title">Weather by city</strong>
+      <div class="inline-field"><input id="wCityIn" placeholder="City name…" aria-label="Weather city" maxlength="60"><button class="btn small" id="wCityGo">Set</button></div>`;
+    const inp = host.querySelector('#wCityIn'), go = host.querySelector('#wCityGo');
     const submit = async () => {
       if (!inp.value.trim()) return;
       go.disabled = true;
@@ -135,12 +144,23 @@ export function mountWeather(panel) {
   }
 
   function refresh() {
-    if (!enabled()) { panel.hidden = true; return; }
-    panel.hidden = false;
+    if (!enabled()) { host.innerHTML = '<p class="muted small">Weather is off — turn it on in Settings.</p>'; return; }
     if (!city()) drawSetup();
     else load();
   }
 
+  host.addEventListener('click', e => { if (e.target.closest('[data-close]')) close(); });
+
+  if (chip) chip.onclick = () => {
+    if (!open && !enabled()) setEnabled(true);
+    open ? close() : openDrop();
+  };
+  document.addEventListener('pointerdown', e => {
+    if (!open) return;
+    if (!host.contains(e.target) && !(chip && chip.contains(e.target))) close();
+  });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && open) close(); });
+
   refresh();
-  return { refresh, showDays: () => { if (!open && panel.querySelector('.w-days')) toggleDays(); } };
+  return { refresh, close };
 }

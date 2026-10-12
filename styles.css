@@ -501,41 +501,37 @@ body[data-density="compact"] .grid:not(.dense):not(.outfits) { grid-template-col
 .img-pane .seg { grid-template-columns: repeat(4, 1fr); }
 
 /* Home strip at the top of the closet page */
-.home-strip { margin-bottom: 18px; border: 1px solid var(--line); border-radius: 20px; background: var(--surface); overflow: hidden; }
-.home-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 18px; cursor: pointer; user-select: none; }
-.home-bar:hover { background: var(--surface-2); }
-.home-greet { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
-.home-greet strong { font-size: 18px; }
-.home-side { display: flex; align-items: center; gap: 10px; flex: none; }
-.home-chev { color: var(--muted); font-size: 13px; }
-.home-weather-chip { border: 1px solid var(--line); background: var(--surface-2); color: var(--text); border-radius: 999px; padding: 6px 13px; font-size: 13px; font-weight: 600; cursor: pointer; transition: box-shadow .2s, background .15s; max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.home-strip { position: relative; margin-bottom: 18px; border: 1px solid var(--line); border-radius: 20px; background: var(--surface); }
+.home-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 18px; }
+.home-greet { font-size: clamp(21px, 2.6vw, 27px); font-weight: 700; line-height: 1.1; letter-spacing: -.01em; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.home-actions { display: flex; align-items: center; gap: 10px; flex: none; }
+.home-chev { border: 0; background: none; padding: 4px 6px; border-radius: 8px; color: var(--muted); font-size: 15px; cursor: pointer; line-height: 1; }
+.home-chev:hover { color: var(--text); box-shadow: 0 0 12px var(--glow); }
+.home-weather-chip { border: 1px solid var(--line); background: var(--surface-2); color: var(--text); border-radius: 999px; padding: 7px 14px; font-size: 13px; font-weight: 600; cursor: pointer; transition: box-shadow .2s, background .15s, border-color .2s; max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .home-weather-chip:hover { box-shadow: 0 0 14px var(--glow); }
-.home-body { padding: 2px 18px 16px; display: grid; gap: 14px; }
-.home-nick { border: 1px dashed var(--line); border-radius: 14px; padding: 14px; display: grid; gap: 6px; }
-.home-nick strong { font-size: 15px; }
+.home-weather-chip.on { border-color: var(--accent); }
+.home-body { padding: 0 18px 14px; }
 .home-shortcuts { display: flex; flex-wrap: wrap; gap: 8px; }
 
-/* Weather widget */
-.home-forecast { display: grid; gap: 8px; }
-.w-main { display: inline-flex; align-items: center; gap: 10px; border: 0; background: var(--surface-2); color: var(--text); padding: 10px 16px; border-radius: 999px; font: inherit; font-weight: 600; cursor: pointer; transition: box-shadow .2s; text-align: left; }
-.w-main:hover:not(:disabled) { box-shadow: 0 0 14px var(--glow); }
-.w-main:disabled { cursor: default; opacity: .8; }
-.w-ico { font-size: 20px; }
-.w-cur { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.05; }
-.w-cur b { font-size: 19px; }
+/* Weather dropdown (the only weather UI — opens under the chip) */
+.home-dropdown { position: absolute; top: calc(100% - 6px); right: 14px; z-index: 45; width: min(420px, calc(100vw - 24px)); background: var(--surface); border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 12px 32px rgba(0, 0, 0, .18); padding: 14px; }
+.w-dd-head { display: flex; align-items: center; gap: 10px; }
+.w-ico { font-size: 24px; }
+.w-cur { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.05; min-width: 0; }
+.w-cur b { font-size: 20px; }
 .w-cur span { font-size: 12px; color: var(--muted); font-weight: 400; }
-.w-city { color: var(--muted); font-weight: 500; font-size: 13px; margin-left: 2px; }
-.w-car { color: var(--muted); font-size: 11px; margin-left: 4px; }
-.w-err .w-cur span { color: var(--danger); }
-.w-days { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 8px; }
+.w-city { margin-left: auto; color: var(--muted); font-weight: 500; font-size: 13px; flex: none; }
+.w-dd-close { border: 0; background: none; color: var(--muted); font-size: 18px; line-height: 1; cursor: pointer; padding: 2px 6px; border-radius: 8px; flex: none; }
+.w-dd-close:hover { color: var(--text); }
+.w-days { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 12px; }
 .w-day { display: grid; gap: 4px; padding: 10px; border-radius: 14px; background: var(--surface-2); text-align: center; }
 .w-day.today { outline: 1px solid var(--accent); }
 .w-day-name { font-size: 12px; color: var(--muted); font-weight: 600; }
 .w-day-ico { font-size: 22px; }
 .w-day-temp { display: flex; justify-content: center; gap: 6px; font-size: 13px; }
 .w-day-temp s { color: var(--muted); text-decoration: none; }
-.w-note { margin: 2px 0 0; }
-.w-set { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.w-note { margin: 10px 0 0; }
+.w-set-title { display: block; margin-bottom: 8px; }
 
 /* Settings toggle switch */
 .switch { position: relative; display: inline-block; width: 46px; height: 26px; flex: none; }
@@ -548,7 +544,8 @@ body[data-density="compact"] .grid:not(.dense):not(.outfits) { grid-template-col
 
 @media (max-width: 900px) {
   .home-bar { padding: 12px 14px; }
-  .home-body { padding: 2px 14px 14px; }
+  .home-greet { font-size: 21px; }
   .home-weather-chip { max-width: 150px; }
+  .home-dropdown { left: 12px; right: 12px; width: auto; }
   .w-days { grid-template-columns: repeat(2, 1fr); }
 }
