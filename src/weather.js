@@ -1,6 +1,6 @@
-// Weather widget: free Open-Meteo API (no key), forecast cached 30 minutes for offline use.
-// UI is one chip in the home bar; clicking it opens a small dropdown with the current
-// conditions and the next 3 days. "Widgets" live only in that dropdown.
+// Weather widget — free Open-Meteo API (no key needed). A single chip sits in the
+// home strip; tapping it opens a compact forecast popover. Forecasts are cached for
+// 30 minutes so the last reading still shows offline.
 import * as db from './database.js';
 import { esc, toast } from './components.js';
 
@@ -33,8 +33,10 @@ export const city = () => db.settings.get('weatherCity', null);
 export const setCity = c => { db.settings.set('weatherCity', c); emit(); };
 export const onWeatherChange = fn => { readers.add(fn); return () => readers.delete(fn); };
 
-let last = null; // { label, ico, temp } of the most recent forecast, for compact chips
+let last = null; // { label, ico, temp } of the most recent forecast, for the compact chip
 export const summary = () => last;
+
+const shortPlace = label => (label || '').split(',')[0].trim();
 
 export async function resolveCity(q) {
   const r = await fetch(`${GEO}?name=${encodeURIComponent(q.trim())}&count=1&language=en&format=json`);
@@ -70,8 +72,8 @@ export async function fetchForecast(c) {
 
 const dayName = t => { try { return new Date(t + 'T12:00').toLocaleDateString(undefined, { weekday: 'short' }); } catch { return ''; } };
 
-// Renders into `host` (an empty dropdown container next to the bar) and keeps `chip`
-// (the button in the bar) in sync. Toggling the chip opens/closes the dropdown.
+// Renders into `host` (the popover container beside the strip) and keeps `chip`
+// (the button in the strip) in sync. Tapping the chip toggles the popover.
 export function mountWeather({ host, chip }) {
   if (!host) return { refresh: () => {}, close: () => {} };
   let open = false;
@@ -79,38 +81,53 @@ export function mountWeather({ host, chip }) {
   function setOpen(v) {
     open = v;
     host.hidden = !v;
-    if (chip) {
-      chip.classList.toggle('on', v);
-      chip.setAttribute('aria-expanded', String(v));
-    }
+    if (chip) { chip.classList.toggle('on', v); chip.setAttribute('aria-expanded', String(v)); }
   }
   const close = () => setOpen(false);
   const openDrop = () => { setOpen(true); refresh(); };
 
-  function draw(data) {
-    const [cLabel, cIco] = codeInfo(data.current.code);
-    const c = city(); const label = c ? c.label : '';
-    host.innerHTML = `<div class="w-dd-head">
-        <span class="w-ico">${cIco}</span><span class="w-cur"><b>${data.current.temp}°</b><span>${cLabel}</span></span>
-        <span class="w-city">${esc(label)}</span>
-        <button type="button" class="w-dd-close" data-close aria-label="Close weather">×</button>
+  function daysBlock(days) {
+    return `<div class="wx-days">${days.map((d, i) => `<div class="wx-day${i === 0 ? ' today' : ''}">
+        <span class="wx-dn">${i === 0 ? 'Today' : dayName(d.date)}</span>
+        <span class="wx-di">${codeInfo(d.code)[1]}</span>
+        <span class="wx-dt"><b>${d.max}°</b><i>${d.min}°</i></span>
+      </div>`).join('')}</div>`;
+  }
+
+  function draw(d) {
+    const [cond, ico] = codeInfo(d.current.code);
+    host.innerHTML = `<div class="wx-top">
+        <span class="wx-ico">${ico}</span>
+        <div class="wx-now"><b>${d.current.temp}°</b><span>${cond}</span></div>
+        <div class="wx-place"><span class="wx-city">${esc(shortPlace(city().label))}</span><span class="wx-feels">Feels ${d.current.feels}°</span></div>
+        <button type="button" class="wx-close" data-close aria-label="Close forecast">×</button>
+      </div>${daysBlock(d.days)}`;
+  }
+
+  function loading() {
+    const c = city();
+    host.innerHTML = `<div class="wx-top">
+        <span class="wx-ico">⛅</span>
+        <div class="wx-now"><b>—</b><span>Loading…</span></div>
+        <div class="wx-place"><span class="wx-city">${esc(shortPlace(c ? c.label : ''))}</span></div>
       </div>
-      <div class="w-days">
-        ${data.days.map((d, i) => `<div class="w-day${i === 0 ? ' today' : ''}"><span class="w-day-name">${i === 0 ? 'Today' : dayName(d.date)}</span><span class="w-day-ico">${codeInfo(d.code)[1]}</span><span class="w-day-temp"><b>${d.max}°</b><s>${d.min}°</s></span></div>`).join('')}
-      </div>
-      <p class="muted small w-note">Feels like ${data.current.feels}° in ${esc(label)}.</p>`;
+      <div class="wx-days">${'<div class="wx-day wx-skel"></div>'.repeat(4)}</div>`;
   }
 
   function fail(msg) {
     const c = city();
-    host.innerHTML = `<div class="w-dd-head"><span class="w-ico">⚠️</span><span class="w-cur"><b>—</b><span>${esc(msg)}</span></span><span class="w-city">${esc(c ? c.label : '')}</span></div>
-      <p class="muted small w-note"><button class="link" data-retry>Try again</button></p>`;
-    host.querySelector('[data-retry]').onclick = refresh;
+    host.innerHTML = `<div class="wx-top">
+        <span class="wx-ico">⚠️</span>
+        <div class="wx-now"><b>—</b><span>Weather unavailable</span></div>
+        <div class="wx-place"><span class="wx-city">${esc(shortPlace(c.label))}</span></div>
+        <button type="button" class="wx-close" data-close aria-label="Close forecast">×</button>
+      </div>
+      <p class="wx-retry muted small">${esc(msg)} <button class="link" data-retry>Try again</button></p>`;
   }
 
   async function load() {
     const c = city(); if (!c) return;
-    host.innerHTML = `<div class="w-dd-head"><span class="w-ico">🕐</span><span class="w-cur"><b>…</b><span>Loading weather</span></span><span class="w-city">${esc(c.label)}</span></div>`;
+    loading();
     try {
       const before = summary();
       const data = await fetchForecast(c);
@@ -125,36 +142,51 @@ export function mountWeather({ host, chip }) {
   }
 
   function drawSetup() {
-    host.innerHTML = `<strong class="w-set-title">Weather by city</strong>
-      <div class="inline-field"><input id="wCityIn" placeholder="City name…" aria-label="Weather city" maxlength="60"><button class="btn small" id="wCityGo">Set</button></div>`;
-    const inp = host.querySelector('#wCityIn'), go = host.querySelector('#wCityGo');
-    const submit = async () => {
+    const c = city();
+    host.innerHTML = `<form class="wx-setup">
+        <span class="wx-setup-title">Which city?</span>
+        <div class="wx-setup-row">
+          <input id="wCityIn" class="wx-input" placeholder="City name" aria-label="Weather city" maxlength="60" autocomplete="off" value="${c ? esc(shortPlace(c.label)) : ''}">
+          <button class="btn primary small" id="wCityGo" type="submit">Set</button>
+        </div>
+        <span class="wx-hint">Forecast from Open-Meteo · no account needed</span>
+      </form>`;
+    const form = host.querySelector('.wx-setup'), inp = host.querySelector('#wCityIn'), go = host.querySelector('#wCityGo');
+    form.onsubmit = async e => {
+      e.preventDefault();
       if (!inp.value.trim()) return;
       go.disabled = true;
       try {
-        const c = await resolveCity(inp.value);
-        if (!c) { toast('No matching city — try another name.', 'error'); return; }
-        setCity(c);
+        const found = await resolveCity(inp.value);
+        if (!found) { toast('No matching city — try another name.', 'error'); return; }
+        setCity(found);
       } catch (e2) { toast(e2.message || 'Could not find that city.', 'error'); }
       finally { go.disabled = false; }
     };
-    go.onclick = submit;
-    inp.onkeydown = e => { if (e.key === 'Enter') { e.preventDefault(); submit(); } };
     setTimeout(() => inp.focus(), 30);
   }
 
+  function drawOff() {
+    host.innerHTML = `<div class="wx-off">
+        <span class="wx-off-ico">🌤️</span>
+        <p class="muted small">Weather is off.</p>
+        <button class="btn primary small" data-enable>Turn on weather</button>
+      </div>`;
+  }
+
   function refresh() {
-    if (!enabled()) { host.innerHTML = '<p class="muted small">Weather is off — turn it on in Settings.</p>'; return; }
+    if (!enabled()) { drawOff(); return; }
     if (!city()) drawSetup();
     else load();
   }
 
-  host.addEventListener('click', e => { if (e.target.closest('[data-close]')) close(); });
+  host.addEventListener('click', e => {
+    if (e.target.closest('[data-close]')) close();
+    else if (e.target.closest('[data-retry]')) load();
+    else if (e.target.closest('[data-enable]')) setEnabled(true);
+  });
 
-  if (chip) chip.onclick = () => {
-    if (!open && !enabled()) setEnabled(true);
-    open ? close() : openDrop();
-  };
+  if (chip) chip.onclick = () => { if (!open && !enabled()) setEnabled(true); open ? close() : openDrop(); };
   document.addEventListener('pointerdown', e => {
     if (!open) return;
     if (!host.contains(e.target) && !(chip && chip.contains(e.target))) close();

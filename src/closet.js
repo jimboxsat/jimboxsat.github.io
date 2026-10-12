@@ -155,7 +155,8 @@ export function createCloset(root, { onAddToOutfit, onLoadDemo, onRemoveDemo, on
   // ---------------- Home strip ----------------
   function greetingLine() {
     const h = new Date().getHours();
-    return h < 5 ? 'Up late, 🌙' : h < 12 ? 'Good morning, ☀️' : h < 18 ? 'Good afternoon, 🌞' : h < 21 ? 'Good evening, 🌆' : 'Good evening, 🌙';
+    const [text, emoji] = h < 5 ? ['Up late,', '🌙'] : h < 12 ? ['Good morning,', '☀️'] : h < 18 ? ['Good afternoon,', '🌞'] : h < 21 ? ['Good evening,', '🌆'] : ['Good evening,', '🌙'];
+    return `<span class="home-greet-text">${text}</span> <span class="home-greet-emoji">${emoji}</span>`;
   }
 
   function renderHome() {
@@ -169,11 +170,14 @@ export function createCloset(root, { onAddToOutfit, onLoadDemo, onRemoveDemo, on
 
   function renderChip() {
     const chip = $('#home-weather', root); if (!chip) return;
-    if (!weather.enabled()) { chip.textContent = '＋ Weather'; chip.title = 'Turn on the weather widget.'; return; }
+    if (!weather.enabled()) { chip.innerHTML = '<span class="wc-ico">🌤️</span><span>Weather</span>'; chip.title = 'Tap to set up the weather widget.'; return; }
     const c = weather.city(), s = weather.summary();
-    if (!c) { chip.textContent = '＋ Set weather city'; chip.title = 'Pick a city for the forecast.'; return; }
-    chip.textContent = s ? `${s.ico} ${s.temp}° · ${c.label}` : 'Weather…';
-    chip.title = `Weather in ${c.label}. Tap for the next 3 days.`;
+    if (!c) { chip.innerHTML = '<span class="wc-ico">📍</span><span>Set city</span>'; chip.title = 'Pick a city for the forecast.'; return; }
+    const place = c.label.split(',')[0].trim();
+    chip.innerHTML = s
+      ? `<span class="wc-ico">${s.ico}</span><span class="wc-temp">${s.temp}°</span><span class="wc-city">${esc(place)}</span>`
+      : '<span class="wc-ico">⛅</span><span>Weather…</span>';
+    chip.title = `Weather in ${c.label}. Tap for the forecast.`;
   }
 
   function wireHome() {
