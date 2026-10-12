@@ -502,7 +502,9 @@ body[data-density="compact"] .grid:not(.dense):not(.outfits) { grid-template-col
 
 /* Home strip at the top of the closet page */
 .home-strip { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
-.home-greet { font-size: clamp(21px, 2.6vw, 27px); font-weight: 700; line-height: 1.1; letter-spacing: -.01em; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.home-greet { display: flex; flex-direction: column; gap: 2px; font-size: clamp(28px, 3.6vw, 42px); font-weight: 700; line-height: 1.05; letter-spacing: -.015em; min-width: 0; }
+.home-greet-line { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.home-name { font-size: .66em; font-weight: 600; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .home-actions { display: flex; align-items: center; gap: 10px; flex: none; }
 .home-weather-chip { border: 1px solid var(--line); background: var(--surface-2); color: var(--text); border-radius: 999px; padding: 7px 14px; font-size: 13px; font-weight: 600; cursor: pointer; transition: box-shadow .2s, background .15s, border-color .2s; max-width: 240px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .home-weather-chip:hover { box-shadow: 0 0 14px var(--glow); }
@@ -510,7 +512,7 @@ body[data-density="compact"] .grid:not(.dense):not(.outfits) { grid-template-col
 .home-shortcuts { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
 
 /* Weather dropdown (the only weather UI — opens under the chip) */
-.home-dropdown { position: absolute; top: calc(100% - 6px); right: 14px; z-index: 45; width: min(420px, calc(100vw - 24px)); background: var(--surface); border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 12px 32px rgba(0, 0, 0, .18); padding: 14px; }
+.home-dropdown { position: absolute; top: calc(100% - 6px); left: 50%; transform: translateX(-50%); z-index: 45; width: min(420px, calc(100vw - 24px)); background: var(--surface); border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 12px 32px rgba(0, 0, 0, .18); padding: 14px; }
 .w-dd-head { display: flex; align-items: center; gap: 10px; }
 .w-ico { font-size: 24px; }
 .w-cur { display: flex; flex-direction: column; align-items: flex-start; line-height: 1.05; min-width: 0; }
@@ -539,8 +541,8 @@ body[data-density="compact"] .grid:not(.dense):not(.outfits) { grid-template-col
 .switch input:focus-visible + span { outline: 2px solid var(--text); outline-offset: 1px; }
 
 @media (max-width: 900px) {
-  .home-greet { font-size: 21px; }
+  .home-greet { font-size: 30px; }
   .home-weather-chip { max-width: 150px; }
-  .home-dropdown { left: 12px; right: 12px; width: auto; }
+  .home-dropdown { left: 12px; right: 12px; width: auto; transform: none; }
   .w-days { grid-template-columns: repeat(2, 1fr); }
 }

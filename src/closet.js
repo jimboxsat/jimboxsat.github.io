@@ -153,15 +153,17 @@ export function createCloset(root, { onAddToOutfit, onLoadDemo, onRemoveDemo, on
   }
 
   // ---------------- Home strip ----------------
-  function greet() {
-    const p = db.getProfile();
+  function greetingLine() {
     const h = new Date().getHours();
-    const g = h < 5 ? 'Up late 🌙' : h < 12 ? 'Good morning ☀️' : h < 18 ? 'Good afternoon 🌞' : h < 21 ? 'Good evening 🌆' : 'Good evening 🌙';
-    return p.nickname ? `${g}, ${p.nickname}` : g;
+    return h < 5 ? 'Up late, 🌙' : h < 12 ? 'Good morning, ☀️' : h < 18 ? 'Good afternoon, 🌞' : h < 21 ? 'Good evening, 🌆' : 'Good evening, 🌙';
   }
 
   function renderHome() {
-    $('#home-greet', root).textContent = greet();
+    const p = db.getProfile();
+    const el = $('#home-greet', root);
+    el.innerHTML = p.nickname
+      ? `<span class="home-greet-line">${greetingLine()}</span><span class="home-name">${esc(p.nickname)}</span>`
+      : `<span class="home-greet-line">${greetingLine()}</span>`;
     renderChip();
   }
 
