@@ -2,11 +2,12 @@
 
 Local-first web app — vanilla JavaScript (ES modules). Your photos, items and outfits live in the browser's IndexedDB, preferences in LocalStorage. No account, no tracking, no server: everything stays on your device.
 
-Version: **alpha 0.3.1**
+Version: **alpha 0.4.0**
 
 ## Features
 
 ### Closet
+- Collapsible **Home** strip at the top: a greeting with your name, live item/outfit counts, quick links to Add item / Dress me / Canvas, and an optional **weather widget** (current conditions + the next 3 days for your city, via Open-Meteo — no account, cached for offline use).
 - Card grid of your clothes with category tabs and subcategory navigation.
 - Search by name, brand, color or tag; filter by colors, brands, seasons, occasions, tags and favorites (with removable filter pills and an active-filter count).
 - Favorite any item with a tap on its star.
@@ -31,7 +32,7 @@ Opens on a choice between two modes (or jumps straight into your preferred one):
 
 - **Dress me** — swipe rows of Tops, Bottoms and Shoes:
   - rows **loop infinitely**, wrapping from the last item back to the first
-  - the piece resting in the middle of a row is the pick; choose **None** to leave a row empty
+  - the piece resting in the middle of a row is the pick
   - **pin** a row so the dice skips it (floating pin button on mobile, header pin on desktop)
   - dice picks a look with **Random** or **Color match**
   - pictures are sized so every piece shows fully, even on the smallest phones (the whole screen fits without scrolling)
@@ -49,6 +50,7 @@ Opens on a choice between two modes (or jumps straight into your preferred one):
 
 ### Settings
 - **Appearance** — follow your device's theme, or force light/dark.
+- **Home** — set the name used in the greeting (and whether the first-open prompt is skipped), and turn the weather widget on/off with a city for the forecast.
 - **Outfit Builder** — choose whether it asks which mode to open, and the default dice mode.
 - **Photos and data** — see what's saved and how much space it uses; ask the browser to **protect your data** (persistent storage); **Export backup** / **Import backup** (merge with this device or replace everything) as one JSON file that includes photos; remove sample content; delete all outfits; delete everything (typed confirmation); reset preferences.
 - **Automatic backup** — link a file (e.g. inside iCloud Drive, OneDrive or Google Drive) and Atelier re-saves it whenever your closet changes, so another device can pick it up. Shows last-saved time, with Save now / Reconnect / Unlink.
@@ -65,4 +67,4 @@ Photos and outfits are kept in the browser's IndexedDB and survive closing and r
 
 ## Files
 
-`src/database.js` storage (IndexedDB) · `src/closet.js`, `src/filters.js`, `src/item-editor.js` closet &amp; editing · `src/image-utils.js` photo processing · `src/outfit-builder.js` canvas &amp; My Outfits · `src/dress-me.js` Dress me · `src/settings.js`, `src/backup.js`, `src/autobackup.js`, `src/gdrive.js` settings and data safety · `src/screenshot.js` cropper · `src/demo.js` sample closet · `src/app.js` shell · `styles.css` · `atelier.otf` logo font.
+`src/database.js` storage (IndexedDB) · `src/closet.js`, `src/filters.js`, `src/item-editor.js` closet &amp; editing · `src/image-utils.js` photo processing · `src/outfit-builder.js` canvas &amp; My Outfits · `src/dress-me.js` Dress me · `src/weather.js` weather widget · `src/settings.js`, `src/backup.js`, `src/autobackup.js`, `src/gdrive.js` settings and data safety · `src/screenshot.js` cropper · `src/demo.js` sample closet · `src/app.js` shell · `styles.css` · `atelier.otf` logo font.

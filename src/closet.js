@@ -3,14 +3,37 @@ import { esc, $, $$, itemCard, icons, debounce, toast, confirmDialog } from './c
 import { newFilters, activeCount, applyFilters, renderCategoryTabs, openFilterPanel } from './filters.js';
 import { openItemEditor, openItemDetails } from './item-editor.js';
 import { pruneUrlCache } from './image-utils.js';
+import * as weather from './weather.js';
 
-export function createCloset(root, { onAddToOutfit, onBuild, onLoadDemo, onRemoveDemo }) {
+export function createCloset(root, { onAddToOutfit, onLoadDemo, onRemoveDemo, onOpenDressMe, onOpenCanvas }) {
   const filters = newFilters();
-  let items = [];
+  let items = [], outfits = [];
   let loaded = false, error = null, viewing = false;
   const selected = new Set();
 
   root.innerHTML = `
+    <div class="home-strip" id="home-strip">
+      <div class="home-bar" id="home-bar" role="button" tabindex="0" aria-expanded="false">
+        <span class="home-greet"><strong id="home-greet"></strong><span class="muted small" id="home-count"></span></span>
+        <span class="home-side">
+          <button class="home-weather-chip" id="home-weather" type="button">＋ Weather</button>
+          <span class="home-chev" id="home-chev" aria-hidden="true">▾</span>
+        </span>
+      </div>
+      <div class="home-body" id="home-body">
+        <div class="home-nick" id="home-nick" hidden>
+          <strong>What should we call you?</strong>
+          <p class="muted small">Only used in the greeting at the top of this page.</p>
+          <div class="inline-field"><input id="home-nick-in" maxlength="30" placeholder="Your name or nickname" aria-label="Your name or nickname" autocomplete="nickname"><button class="btn small" id="home-nick-save">Save</button><button class="link" id="home-nick-skip">Not now</button></div>
+        </div>
+        <div class="home-forecast" id="home-forecast"></div>
+        <div class="home-shortcuts">
+          <button class="btn ghost" data-home-short="add">${icons.plus}<span>Add item</span></button>
+          <button class="btn ghost" data-home-short="dress">Dress me</button>
+          <button class="btn ghost" data-home-short="canvas">Canvas</button>
+        </div>
+      </div>
+    </div>
     <div class="page-head">
       <div><h1>My Closet</h1><p class="muted" id="cl-count" aria-live="polite"></p></div>
     </div>
@@ -28,7 +51,7 @@ export function createCloset(root, { onAddToOutfit, onBuild, onLoadDemo, onRemov
   const grid = $('#cl-grid', root), stateEl = $('#cl-state', root);
 
   async function load() {
-    try { items = await db.getItems(); error = null; }
+    try { [items, outfits] = await Promise.all([db.getItems(), db.getOutfits()]); error = null; }
     catch (e) { console.error(e); error = e; }
     loaded = true;
     pruneUrlCache(new Set(items.map(i => i.id)));
@@ -36,6 +59,7 @@ export function createCloset(root, { onAddToOutfit, onBuild, onLoadDemo, onRemov
   }
 
   function render() {
+    renderHome();
     const n = activeCount(filters);
     const fc = $('#cl-fcount', root); fc.hidden = !n; fc.textContent = n;
     renderCategoryTabs($('#cl-tabs', root), filters, items, render);
@@ -122,6 +146,79 @@ export function createCloset(root, { onAddToOutfit, onBuild, onLoadDemo, onRemov
     }
   }
 
+  // ---------------- Home strip ----------------
+  function greet() {
+    const p = db.getProfile();
+    const h = new Date().getHours();
+    const g = h < 5 ? 'Up late' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+    return p.nickname ? `${g}, ${p.nickname}` : g;
+  }
+
+  function renderHome() {
+    const open = !db.settings.get('homeCollapsed', false);
+    const body = $('#home-body', root), bar = $('#home-bar', root);
+    body.hidden = !open;
+    bar.setAttribute('aria-expanded', String(open));
+    const cv = $('#home-chev', root); if (cv) cv.textContent = open ? '▾' : '▸';
+    $('#home-greet', root).textContent = greet();
+    $('#home-count', root).textContent = loaded
+      ? `${items.length} item${items.length === 1 ? '' : 's'} · ${outfits.length} outfit${outfits.length === 1 ? '' : 's'}`
+      : '';
+    const p = db.getProfile();
+    $('#home-nick', root).hidden = !!(p.nickname) || db.settings.get('nicknameSkipped', false);
+    renderChip();
+  }
+
+  function renderChip() {
+    const chip = $('#home-weather', root); if (!chip) return;
+    if (!weather.enabled()) { chip.textContent = '＋ Weather'; chip.title = 'Turn on the weather widget.'; return; }
+    const c = weather.city(), s = weather.summary();
+    if (!c) { chip.textContent = '＋ Set weather city'; chip.title = 'Pick a city for the forecast.'; return; }
+    chip.textContent = s ? `${s.ico} ${s.temp}° · ${c.label}` : 'Weather…';
+    chip.title = `Weather in ${c.label}. Tap for the next 3 days.`;
+  }
+
+  function toggleHome() {
+    db.settings.set('homeCollapsed', !db.settings.get('homeCollapsed', false));
+    renderHome();
+  }
+  function expandHome() {
+    if (db.settings.get('homeCollapsed', false)) { db.settings.set('homeCollapsed', false); renderHome(); }
+  }
+
+  function wireHome() {
+    const bar = $('#home-bar', root);
+    bar.onclick = e => { if (e.target.closest('#home-weather')) return; toggleHome(); };
+    bar.onkeydown = e => { if (e.target && e.target.closest('#home-weather')) return; if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleHome(); } };
+
+    $('#home-nick-save', root).onclick = () => {
+      const v = $('#home-nick-in', root).value.trim();
+      if (!v) { toast('Enter a name or press “Not now”.', 'info'); return; }
+      db.setProfile({ nickname: v });
+      db.settings.set('nicknameSkipped', false);
+      renderHome();
+      toast('Nice to meet you!', 'success');
+    };
+    $('#home-nick-skip', root).onclick = () => { db.settings.set('nicknameSkipped', true); renderHome(); };
+
+    $$('[data-home-short]', root).forEach(btn => btn.onclick = () => {
+      const k = btn.dataset.homeShort;
+      if (k === 'add') add();
+      else if (k === 'dress' && onOpenDressMe) onOpenDressMe();
+      else if (k === 'canvas' && onOpenCanvas) onOpenCanvas();
+    });
+
+    const weatherWidget = weather.mountWeather($('#home-forecast', root));
+    const homeChip = $('#home-weather', root);
+    weather.onWeatherChange(() => { renderChip(); weatherWidget.refresh(); });
+    homeChip.onclick = () => {
+      if (!weather.enabled()) { weather.setEnabled(true); expandHome(); return; }
+      expandHome();
+      requestAnimationFrame(() => weatherWidget.showDays());
+    };
+  }
+  wireHome();
+
   // Event delegation for cards
   grid.addEventListener('click', async e => {
     const card = e.target.closest('.card'); if (!card || card.classList.contains('skeleton')) return;
@@ -188,7 +285,12 @@ export function createCloset(root, { onAddToOutfit, onBuild, onLoadDemo, onRemov
   };
   $('#cl-unarchive-btn', root).onclick = unarchiveSelected;
 
-  db.onChange(k => { if (k === 'items') load(); });
+  db.onChange(k => {
+    if (k === 'items') load();
+    else if (k === 'outfits' || k === 'profile') {
+      db.getOutfits().then(o => { outfits = o; renderHome(); }).catch(() => {});
+    }
+  });
   load();
   return { add, refresh: load, getItems: () => items };
 }

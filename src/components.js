@@ -17,6 +17,7 @@ export const icons = {
   archive: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="4" rx="1.2"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8M10 12.5h4"/></svg>',
   palette: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 0 0 0 18 2 2 0 0 0 2-2c0-.55-.22-1.05-.58-1.41a1.99 1.99 0 0 1 1.41-3.4H17a4 4 0 0 0 4-4c0-3.92-4.03-7.19-9-7.19z"/><circle cx="7.3" cy="11.2" r="1.05" fill="currentColor" stroke="none"/><circle cx="10" cy="7.3" r="1.05" fill="currentColor" stroke="none"/><circle cx="14.4" cy="7" r="1.05" fill="currentColor" stroke="none"/><circle cx="17.3" cy="10.4" r="1.05" fill="currentColor" stroke="none"/></svg>',
   shirt: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3.5 6 5 3 7l2 4 2-1v9.5h10V10l2 1 2-4-3-2-3-1.5-2 2z"/></svg>',
+  user: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7.5" r="3.8"/><path d="M4.5 20c.9-3.4 3.8-5 7.5-5s6.6 1.6 7.5 5"/></svg>',
   sparkle: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5l2 5.5 5.5 2-5.5 2-2 5.5-2-5.5L4.5 10l5.5-2z"/></svg>',
   database: '<svg viewBox="0 0 24 24" aria-hidden="true"><ellipse cx="12" cy="5.5" rx="7" ry="2.8"/><path d="M5 5.5v6c0 1.55 3.13 2.8 7 2.8s7-1.25 7-2.8v-6"/><path d="M5 11.5v6c0 1.55 3.13 2.8 7 2.8s7-1.25 7-2.8v-6"/></svg>',
   refresh: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 0 1 13.66-5.66L20 8"/><path d="M20 4v4h-4"/><path d="M20 12a8 8 0 0 1-13.66 5.66L4 16"/><path d="M4 20v-4h4"/></svg>',

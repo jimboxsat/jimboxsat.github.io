@@ -81,7 +81,9 @@ async function removeDemo() {
 const settingsPage = createSettings(views.settings, { onRemoveDemo: removeDemo });
 const closet = createCloset(views.closet, {
   onAddToOutfit: id => { showView('outfits'); setMode('canvas'); builder.addItem(id); },
-  onLoadDemo: loadDemo, onRemoveDemo: removeDemo
+  onLoadDemo: loadDemo, onRemoveDemo: removeDemo,
+  onOpenDressMe: () => { showView('outfits'); setMode('dress'); },
+  onOpenCanvas: () => { showView('outfits'); setMode('canvas'); }
 });
 
 // Opening the Outfit Builder shows the two options (or jumps straight to the mode chosen in Settings).

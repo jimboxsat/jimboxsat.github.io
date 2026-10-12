@@ -3,9 +3,10 @@ import { esc, $, $$, openModal, confirmDialog, toast, icons } from './components
 import { exportBackup, importBackup } from './backup.js';
 import * as auto from './autobackup.js';
 import * as gdrive from './gdrive.js';
+import * as weather from './weather.js';
 
 const prefs = db.settings;
-const VERSION = 'alpha 0.3.1';
+const VERSION = 'alpha 0.4.0';
 const PREF_KEYS = ['theme', 'startMode', 'dressMode', 'searchEngine'];
 
 // ---- Appearance: 'system' follows the device; the CSS only needs data-theme="dark" | "light"
@@ -53,6 +54,8 @@ export function createSettings(root, { onRemoveDemo } = {}) {
     try { [items, outfits] = await Promise.all([db.getItems(), db.getOutfits()]); } catch (e) { console.error(e); }
     try { info = await db.storageInfo(); } catch { /* unsupported */ }
     const theme = prefs.get('theme', 'system'), startMode = prefs.get('startMode', 'ask'), dice = prefs.get('dressMode', 'random') === 'color' ? 'color' : 'random';
+    const nickname = db.getProfile().nickname;
+    const weatherOn = weather.enabled(), weatherCity = weather.city();
     const hasDemo = items.some(i => i.demo) || outfits.some(o => o.demo);
     const photos = items.filter(i => i.imageBlob).length;
     const autoSup = auto.supported();
@@ -83,6 +86,12 @@ export function createSettings(root, { onRemoveDemo } = {}) {
 
       <section class="s-card">${sTitle(sIco(icons.palette), 'Appearance')}
         ${row('Theme', 'Follow your device, or pick light or dark.', radios('theme', theme, [['system', 'System'], ['light', 'Light'], ['dark', 'Dark']]))}
+      </section>
+
+      <section class="s-card">${sTitle(sIco(icons.user), 'Home')}
+        ${row('Your name', 'Shown in the greeting at the top of the page.', `<div class="inline-field"><input id="nickIn" maxlength="30" placeholder="e.g. Alex" value="${esc(nickname)}" aria-label="Your name" autocomplete="nickname"><button class="btn" data-act="nickSave">Save</button></div>`)}
+        ${row('Weather widget', 'Show the current weather and the next 3 days for your city at the top of the page.', `<label class="switch"><input type="checkbox" id="weatherEnable" ${weatherOn ? 'checked' : ''}><span aria-hidden="true"></span></label>`)}
+        ${weatherOn ? row('Weather city', 'Looked up with Open-Meteo for the forecast only.', `<div class="inline-field"><input id="wcityIn" maxlength="80" placeholder="City name…" value="${esc(weatherCity ? weatherCity.label : '')}" aria-label="Weather city"><button class="btn" data-act="weatherCity">Save</button></div>`) : ''}
       </section>
 
       <section class="s-card">${sTitle(sIco(icons.shirt, icons.sparkle, 'tr'), 'Outfit Builder')}
@@ -199,6 +208,21 @@ export function createSettings(root, { onRemoveDemo } = {}) {
       } else if (act === 'gdisconnect') {
         await gdrive.disconnect(); toast('Disconnected from Google Drive.'); await render();
       }
+      else if (act === 'nickSave') {
+        const v = $('#nickIn', root).value.trim();
+        db.setProfile({ nickname: v });
+        db.settings.set('nicknameSkipped', !v);
+        toast(v ? 'Your name is saved.' : 'Name cleared.', 'success');
+        await render();
+      } else if (act === 'weatherCity') {
+        const q = $('#wcityIn', root).value.trim();
+        if (!q) { weather.setCity(null); toast('Weather city cleared.'); await render(); return; }
+        try {
+          const c = await weather.resolveCity(q);
+          if (!c) { toast('No matching city — try another name.', 'error'); return; }
+          weather.setCity(c); toast(`Weather set for ${c.label}.`, 'success'); await render();
+        } catch (err) { toast(err.message || 'Could not find that city.', 'error'); }
+      }
       else if (act === 'demo') { await onRemoveDemo && onRemoveDemo(); await render(); }
       else if (act === 'delOutfits') {
         if (await confirmDialog({ title: 'Delete all outfits?', message: 'Every saved outfit will be removed. Your clothing items are kept.', confirmText: 'Delete outfits', danger: true })) {
@@ -224,6 +248,11 @@ export function createSettings(root, { onRemoveDemo } = {}) {
       if (t.name === 'theme') applyTheme();
       toast('Saved'); return;
     }
+    if (t.id === 'weatherEnable') {
+      weather.setEnabled(t.checked);
+      toast(t.checked ? 'Weather widget is on.' : 'Weather widget is off.');
+      await render(); return;
+    }
     if (t.id === 'importFile') {
       const f = t.files[0]; t.value = ''; if (!f) return;
       try {
@@ -235,10 +264,11 @@ export function createSettings(root, { onRemoveDemo } = {}) {
   });
 
   root.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && e.target && e.target.id === 'gclient') {
-      e.preventDefault();
-      const save = $('[data-act="gsave"]', root); if (save) save.click();
-    }
+    if (e.key !== 'Enter' || !e.target || !e.target.id) return;
+    const map = { gclient: 'gsave', nickIn: 'nickSave', wcityIn: 'weatherCity' };
+    const act = map[e.target.id]; if (!act) return;
+    e.preventDefault();
+    const save = $(`[data-act="${act}"]`, root); if (save) save.click();
   });
 
   let timer;

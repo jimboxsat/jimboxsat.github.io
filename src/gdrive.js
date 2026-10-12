@@ -110,6 +110,12 @@ function mergeById(local, remote) {
   return [...map.values()];
 }
 
+function mergeProfile(local, remote) {
+  if (!local || !local.nickname) return remote || local || null;
+  if (!remote || !remote.nickname) return local;
+  return (local.updatedAt || 0) >= (remote.updatedAt || 0) ? local : remote;
+}
+
 // Merge this device with the copy in Drive, upload the union, and apply it here. Last change per item wins.
 export async function sync() {
   if (!configured()) throw new Error('Set a Google client ID first.');
@@ -122,12 +128,14 @@ export async function sync() {
   const merged = {
     app: 'atelier', version: 1, exportedAt: new Date().toISOString(),
     items: mergeById(local.items || [], (remote && remote.items) || []),
-    outfits: mergeById(local.outfits || [], (remote && remote.outfits) || [])
+    outfits: mergeById(local.outfits || [], (remote && remote.outfits) || []),
+    profile: mergeProfile(local.profile || null, (remote && remote.profile) || null)
   };
   const text = JSON.stringify(merged);
   await upload(file && file.id, text);
   const recs = await parseBackupText(text);
   await db.replaceAll(recs.items, recs.outfits);
+  if (recs.profile) db.setProfile(recs.profile);
   write(LS_LAST, String(Date.now()));
   return { items: merged.items.length, outfits: merged.outfits.length, fromDrive: !!remote };
 }

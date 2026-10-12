@@ -12,7 +12,7 @@ export async function collectBackup() {
   for (const it of items) { const c = { ...it }; if (it.imageBlob instanceof Blob) c.imageBlob = await toDataUrl(it.imageBlob); outItems.push(c); }
   const outOutfits = [];
   for (const o of outfits) { const c = { ...o }; if (o.previewImage instanceof Blob) c.previewImage = await toDataUrl(o.previewImage); outOutfits.push(c); }
-  const json = JSON.stringify({ app: 'atelier', version: 1, exportedAt: new Date().toISOString(), items: outItems, outfits: outOutfits });
+  const json = JSON.stringify({ app: 'atelier', version: 1, exportedAt: new Date().toISOString(), items: outItems, outfits: outOutfits, profile: db.getProfile() });
   return { json, items: items.length, outfits: outfits.length };
 }
 
@@ -43,12 +43,21 @@ export async function parseBackupText(text) {
     c.previewImage = typeof o.previewImage === 'string' && o.previewImage.startsWith('data:') ? await fromDataUrl(o.previewImage) : null;
     outfits.push(c);
   }
-  return { items, outfits };
+  const profile = data.profile && typeof data.profile === 'object'
+    ? { nickname: typeof data.profile.nickname === 'string' ? data.profile.nickname : '', updatedAt: Number(data.profile.updatedAt) || 0 }
+    : null;
+  return { items, outfits, profile };
 }
 
 export async function importBackup(file, { mode = 'merge' } = {}) {
-  const { items, outfits } = await parseBackupText(await file.text());
-  if (mode === 'replace') await db.replaceAll(items, outfits);
-  else await db.bulkPut(items, outfits);
+  const { items, outfits, profile } = await parseBackupText(await file.text());
+  if (mode === 'replace') { await db.replaceAll(items, outfits); if (profile) db.setProfile(profile); }
+  else {
+    await db.bulkPut(items, outfits);
+    if (profile) {
+      const cur = db.getProfile();
+      if (!cur.nickname || (profile.updatedAt || 0) >= (cur.updatedAt || 0)) db.setProfile(profile);
+    }
+  }
   return { items: items.length, outfits: outfits.length, mode };
 }
