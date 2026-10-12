@@ -83,7 +83,10 @@ const closet = createCloset(views.closet, {
   onAddToOutfit: id => { showView('outfits'); setMode('canvas'); builder.addItem(id); },
   onLoadDemo: loadDemo, onRemoveDemo: removeDemo,
   onOpenDressMe: () => { showView('outfits'); setMode('dress'); },
-  onOpenCanvas: () => { showView('outfits'); setMode('canvas'); }
+  onOpenCanvas: () => { showView('outfits'); setMode('canvas'); },
+  onOpenOutfit: async id => { showView('outfits'); setMode('canvas'); await builder.openOutfit(id); },
+  onExportOutfit: id => builder.exportOutfit(id),
+  onDeleteOutfit: id => builder.deleteOutfit(id)
 });
 
 // Opening the Outfit Builder shows the two options (or jumps straight to the mode chosen in Settings).

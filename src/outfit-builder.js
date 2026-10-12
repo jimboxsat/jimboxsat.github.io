@@ -519,6 +519,9 @@ export function createOutfitBuilder(root) {
     startNew: () => { setTab('editor'); },
     showList: () => setTab('list'),
     showEditor: () => setTab('editor'),
-    isDirty: () => S.dirty
+    isDirty: () => S.dirty,
+    openOutfit: id => openOutfit(id),
+    exportOutfit: id => { const o = outfits.find(x => x.id === id); if (o) exportDialog(o); },
+    deleteOutfit: id => deleteOutfit(id)
   };
 }

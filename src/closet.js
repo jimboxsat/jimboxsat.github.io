@@ -2,46 +2,54 @@ import * as db from './database.js';
 import { esc, $, $$, itemCard, icons, debounce, toast, confirmDialog } from './components.js';
 import { newFilters, activeCount, applyFilters, renderCategoryTabs, openFilterPanel } from './filters.js';
 import { openItemEditor, openItemDetails } from './item-editor.js';
-import { pruneUrlCache } from './image-utils.js';
+import { imgSrc, pruneUrlCache } from './image-utils.js';
 import * as weather from './weather.js';
 
-export function createCloset(root, { onAddToOutfit, onLoadDemo, onRemoveDemo, onOpenDressMe, onOpenCanvas }) {
+export function createCloset(root, { onAddToOutfit, onLoadDemo, onRemoveDemo, onOpenDressMe, onOpenCanvas, onOpenOutfit, onExportOutfit, onDeleteOutfit }) {
   const filters = newFilters();
   let items = [];
   let loaded = false, error = null, viewing = false;
+  let cloView = 'closet';
+  let outfits = [], oQuery = '', oSort = 'modified';
   const selected = new Set();
 
   root.innerHTML = `
     <div class="home-strip" id="home-strip">
-      <div class="home-bar">
-        <strong class="home-greet" id="home-greet"></strong>
-        <span class="home-actions">
-          <button class="home-weather-chip" id="home-weather" type="button">＋ Weather</button>
-          <button class="home-chev" id="home-chev" title="Show or hide shortcuts" aria-label="Show or hide shortcuts" aria-expanded="true">▾</button>
-        </span>
-      </div>
-      <div class="home-body" id="home-body">
-        <div class="home-shortcuts">
-          <button class="btn primary" data-home-short="add">${icons.plus}<span>Add item</span></button>
-          <button class="btn ghost" data-home-short="dress">Dress me</button>
-          <button class="btn ghost" data-home-short="canvas">Canvas</button>
-        </div>
-      </div>
+      <strong class="home-greet" id="home-greet"></strong>
+      <span class="home-actions">
+        <button class="home-weather-chip" id="home-weather" type="button">＋ Weather</button>
+      </span>
       <div class="home-dropdown" id="home-dropdown" hidden></div>
     </div>
+    <div class="home-shortcuts">
+      <button class="btn primary" data-home-short="add">${icons.plus}<span>Add item</span></button>
+      <button class="btn ghost" data-home-short="dress">Dress me</button>
+      <button class="btn ghost" data-home-short="canvas">Canvas</button>
+    </div>
     <div class="page-head">
-      <div><h1>My Closet</h1><p class="muted" id="cl-count" aria-live="polite"></p></div>
+      <div><h1 id="cl-title">My Closet</h1><p class="muted" id="cl-count" aria-live="polite"></p></div>
+      <div class="subtabs" role="tablist"><button class="subtab active" role="tab" data-cltab="closet" aria-selected="true">Closet</button><button class="subtab" role="tab" data-cltab="outfits" aria-selected="false">My Outfits <span class="count" id="cl-ocount">0</span></button></div>
     </div>
-    <div class="toolbar">
-      <label class="search">${icons.search}<input id="cl-search" type="search" placeholder="Search name, brand, color, tag…" aria-label="Search closet" autocomplete="off"></label>
-      <button class="btn ghost" id="cl-filter">${icons.filter}<span>Filters</span><span class="badge-count" id="cl-fcount" hidden></span></button>
+    <div id="cl-browser" class="cl-browser">
+      <div class="toolbar">
+        <label class="search">${icons.search}<input id="cl-search" type="search" placeholder="Search name, brand, color, tag…" aria-label="Search closet" autocomplete="off"></label>
+        <button class="btn ghost" id="cl-filter">${icons.filter}<span>Filters</span><span class="badge-count" id="cl-fcount" hidden></span></button>
+      </div>
+      <div id="cl-tabs" class="tabs"></div>
+      <div id="cl-active" class="active-filters"></div>
+      <div id="cl-grid" class="grid" role="list"></div>
+      <div id="cl-state"></div>
+      <button class="archive-fab" id="cl-archive" aria-pressed="false" aria-label="Show archived items" title="Show archived items">${icons.archive}<span>Archived</span><span class="badge-count" id="cl-acount" hidden></span></button>
+      <div class="unarchive-bar" id="cl-unarchive" hidden><button class="btn primary" id="cl-unarchive-btn">Unarchive selected</button></div>
     </div>
-    <div id="cl-tabs" class="tabs"></div>
-    <div id="cl-active" class="active-filters"></div>
-    <div id="cl-grid" class="grid" role="list"></div>
-    <div id="cl-state"></div>
-    <button class="archive-fab" id="cl-archive" aria-pressed="false" aria-label="Show archived items" title="Show archived items">${icons.archive}<span>Archived</span><span class="badge-count" id="cl-acount" hidden></span></button>
-    <div class="unarchive-bar" id="cl-unarchive" hidden><button class="btn primary" id="cl-unarchive-btn">Unarchive selected</button></div>`;
+    <div id="cl-outfits" class="cl-outfits" hidden>
+      <div class="toolbar">
+        <label class="search">${icons.search}<input id="clo-search" type="search" placeholder="Search outfits…" aria-label="Search outfits" autocomplete="off"></label>
+        <label class="select-inline"><span class="sr">Sort</span><select id="clo-sort" aria-label="Sort outfits"><option value="modified">Recently modified</option><option value="created">Recently created</option><option value="name">Name A–Z</option></select></label>
+      </div>
+      <div id="clo-grid" class="grid outfits"></div>
+      <div id="clo-state"></div>
+    </div>`;
 
   const grid = $('#cl-grid', root), stateEl = $('#cl-state', root);
 
@@ -51,6 +59,7 @@ export function createCloset(root, { onAddToOutfit, onLoadDemo, onRemoveDemo, on
     loaded = true;
     pruneUrlCache(new Set(items.map(i => i.id)));
     render();
+    if (outfits.length) renderOutfits();
   }
 
   function render() {
@@ -68,9 +77,11 @@ export function createCloset(root, { onAddToOutfit, onLoadDemo, onRemoveDemo, on
     const fabLabel = viewing ? 'Back to your closet' : 'Show archived items';
     fab.setAttribute('aria-label', fabLabel); fab.title = fabLabel;
     const ac = $('#cl-acount', root); ac.hidden = !arch.length; ac.textContent = arch.length;
-    $('#cl-count', root).textContent = loaded
-      ? (viewing ? `${arch.length} archived item${arch.length === 1 ? '' : 's'}` : `${live.length} item${live.length === 1 ? '' : 's'}${arch.length ? ` · ${arch.length} archived` : ''}`)
-      : '';
+    $('#cl-count', root).textContent = cloView === 'outfits'
+      ? (loaded ? `${outfits.length} saved outfit${outfits.length === 1 ? '' : 's'}` : '')
+      : (loaded
+        ? (viewing ? `${arch.length} archived item${arch.length === 1 ? '' : 's'}` : `${live.length} item${live.length === 1 ? '' : 's'}${arch.length ? ` · ${arch.length} archived` : ''}`)
+        : '');
     updateBar();
 
     // active filter pills
@@ -145,16 +156,11 @@ export function createCloset(root, { onAddToOutfit, onLoadDemo, onRemoveDemo, on
   function greet() {
     const p = db.getProfile();
     const h = new Date().getHours();
-    const g = h < 5 ? 'Up late' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
+    const g = h < 5 ? 'Up late 🌙' : h < 12 ? 'Good morning ☀️' : h < 18 ? 'Good afternoon 🌞' : h < 21 ? 'Good evening 🌆' : 'Good evening 🌙';
     return p.nickname ? `${g}, ${p.nickname}` : g;
   }
 
   function renderHome() {
-    const open = !db.settings.get('homeCollapsed', false);
-    const body = $('#home-body', root), chev = $('#home-chev', root);
-    body.hidden = !open;
-    chev.setAttribute('aria-expanded', String(open));
-    chev.textContent = open ? '▾' : '▸';
     $('#home-greet', root).textContent = greet();
     renderChip();
   }
@@ -169,11 +175,6 @@ export function createCloset(root, { onAddToOutfit, onLoadDemo, onRemoveDemo, on
   }
 
   function wireHome() {
-    $('#home-chev', root).onclick = () => {
-      db.settings.set('homeCollapsed', !db.settings.get('homeCollapsed', false));
-      renderHome();
-    };
-
     $$('[data-home-short]', root).forEach(btn => btn.onclick = () => {
       const k = btn.dataset.homeShort;
       if (k === 'add') add();
@@ -185,6 +186,68 @@ export function createCloset(root, { onAddToOutfit, onLoadDemo, onRemoveDemo, on
     weather.onWeatherChange(() => { renderChip(); weatherWidget.refresh(); });
   }
   wireHome();
+
+  // ---------------- My Outfits tab ----------------
+  function setCloTab(tab) {
+    cloView = tab;
+    $$('.subtab', root).forEach(b => { const on = b.dataset.cltab === tab; b.classList.toggle('active', on); b.setAttribute('aria-selected', on); });
+    $('#cl-browser', root).hidden = tab !== 'closet';
+    $('#cl-outfits', root).hidden = tab !== 'outfits';
+    $('#cl-title', root).textContent = tab === 'outfits' ? 'My Outfits' : 'My Closet';
+    if (tab === 'outfits') refreshOutfits();
+    else render();
+  }
+  $$('.subtab', root).forEach(b => b.onclick = () => setCloTab(b.dataset.cltab));
+
+  function miniCollage(o) {
+    const byId = new Map(items.map(i => [i.id, i]));
+    const parts = [...o.items].sort((a, b) => a.layerOrder - b.layerOrder).map(p => {
+      const it = byId.get(p.itemId); if (!it) return '';
+      return `<img src="${imgSrc(it)}" alt="" loading="lazy" style="left:${p.x * 100}%;top:${p.y * 100}%;width:${p.width * 100}%;height:${p.height * 100}%;transform:rotate(${p.rotation || 0}deg);z-index:${p.layerOrder + 1}">`;
+    }).join('');
+    return `<div class="mini">${parts || '<span class="muted small">Empty</span>'}</div>`;
+  }
+
+  async function refreshOutfits() {
+    try { outfits = await db.getOutfits(); } catch (e) { console.error(e); outfits = []; }
+    renderOutfits();
+  }
+
+  function renderOutfits() {
+    $('#cl-ocount', root).textContent = outfits.length;
+    if (cloView === 'outfits') $('#cl-count', root).textContent = `${outfits.length} saved outfit${outfits.length === 1 ? '' : 's'}`;
+    const grid = $('#clo-grid', root), st = $('#clo-state', root);
+    grid.innerHTML = ''; st.innerHTML = '';
+    const q = oQuery.trim().toLowerCase();
+    let list = outfits.filter(o => !q || [o.name, o.occasion, ...(o.tags || [])].join(' ').toLowerCase().includes(q));
+    list.sort((a, b) => oSort === 'name' ? a.name.localeCompare(b.name) : oSort === 'created' ? b.createdAt - a.createdAt : b.updatedAt - a.updatedAt);
+    if (!outfits.length) {
+      st.innerHTML = `<div class="empty"><h2>No saved outfits yet</h2><p class="muted">Combine pieces from your closet into your first look.</p>${onOpenCanvas ? '<button class="btn primary big" id="clo-first">Create your first outfit</button>' : ''}</div>`;
+      const first = $('#clo-first', root); if (first) first.onclick = () => onOpenCanvas();
+      return;
+    }
+    if (!list.length) { st.innerHTML = '<div class="empty"><h2>No outfits match</h2></div>'; return; }
+    grid.innerHTML = list.map(o => {
+      const n = o.items.length;
+      return `<article class="ocard" data-id="${o.id}"><button class="ocard-hit" data-edit aria-label="Edit ${esc(o.name)}">${miniCollage(o)}
+        <span class="card-meta"><span class="card-name">${esc(o.name)}</span><span class="card-sub">${n} item${n === 1 ? '' : 's'}${o.occasion ? ' · ' + esc(o.occasion) : ''}</span></span></button>
+        ${o.demo ? '<span class="badge demo">Sample</span>' : ''}
+        <div class="ocard-actions"><button class="btn tiny ghost" data-edit>Edit</button><button class="btn tiny ghost" data-dup>Duplicate</button><button class="btn tiny ghost" data-exp>Export</button><button class="btn tiny danger-ghost" data-del>Delete</button></div></article>`;
+    }).join('');
+  }
+
+  $('#clo-grid', root).addEventListener('click', async e => {
+    const card = e.target.closest('.ocard'); if (!card) return;
+    const id = card.dataset.id;
+    try {
+      if (e.target.closest('[data-del]')) { if (onDeleteOutfit) await onDeleteOutfit(id); else await db.deleteOutfit(id); }
+      else if (e.target.closest('[data-dup]')) { await db.duplicateOutfit(id); toast('Outfit duplicated'); }
+      else if (e.target.closest('[data-exp]')) { if (onExportOutfit) onExportOutfit(id); }
+      else if (e.target.closest('[data-edit]')) { if (onOpenOutfit) onOpenOutfit(id); }
+    } catch (err) { toast(err.message, 'error'); }
+  });
+  $('#clo-search', root).addEventListener('input', debounce(e => { oQuery = e.target.value; renderOutfits(); }));
+  $('#clo-sort', root).onchange = e => { oSort = e.target.value; renderOutfits(); };
 
   // Event delegation for cards
   grid.addEventListener('click', async e => {
@@ -254,8 +317,10 @@ export function createCloset(root, { onAddToOutfit, onLoadDemo, onRemoveDemo, on
 
   db.onChange(k => {
     if (k === 'items') load();
+    else if (k === 'outfits') { refreshOutfits(); }
     else if (k === 'profile') renderHome();
   });
   load();
+  refreshOutfits();
   return { add, refresh: load, getItems: () => items };
 }
