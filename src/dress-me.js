@@ -1,6 +1,6 @@
 // "Dress me": swipe through tops, bottoms and shoes, pin a row to keep it, roll the dice.
 import * as db from './database.js';
-import { layoutRole, COLOR_NAMES } from './categories.js';
+import { layoutRole } from './categories.js';
 import { esc, $, $$, icons, toast, openModal, debounce } from './components.js';
 import { newFilters, activeCount, applyFilters, openFilterPanel } from './filters.js';
 import { imgSrc, blobToImage, loadImage } from './image-utils.js';
@@ -51,24 +51,6 @@ export function createDressMe(root, { onOpenInCanvas }) {
   const mode = () => (db.settings.get('dressMode', 'random') === 'color' ? 'color' : 'random');
   const byId = id => items.find(i => i.id === id) || null;
   const selected = () => ROWS.map(r => byId(sel[r.role])).filter(Boolean);
-  const sortMode = () => { const v = db.settings.get('dressSort', 'none'); return v === 'brand' || v === 'color' ? v : 'none'; };
-  // Re-orders a row's pieces. Colour sorting groups by each item's MAIN colour only
-  // (colors[0]); pieces with no main colour, or no brand, fall to the end.
-  function sortPool(list) {
-    const s = sortMode();
-    if (s === 'none' || list.length < 2) return list;
-    const arr = list.slice();
-    if (s === 'brand') arr.sort((a, b) => {
-      const ab = (a.brand || '').trim().toLowerCase(), bb = (b.brand || '').trim().toLowerCase();
-      if (!ab !== !bb) return ab ? -1 : 1;
-      return ab.localeCompare(bb) || a.name.localeCompare(b.name);
-    });
-    else arr.sort((a, b) => {
-      const ai = COLOR_NAMES.indexOf(primary(a)), bi = COLOR_NAMES.indexOf(primary(b));
-      return (ai < 0 ? 999 : ai) - (bi < 0 ? 999 : bi) || a.name.localeCompare(b.name);
-    });
-    return arr;
-  }
 
   // ---- Weather pill (kept across rebuilds so its listeners bind only once) ----
   const wxChip = document.createElement('button');
@@ -96,7 +78,7 @@ export function createDressMe(root, { onOpenInCanvas }) {
   async function load() {
     try { items = await db.getItems(); } catch (e) { console.error(e); items = []; }
     const live = applyFilters(items, { ...filters, category: 'All', subcategory: '', q: '', archived: false });
-    for (const r of ROWS) pool[r.role] = sortPool(live.filter(i => layoutRole(i) === r.role));
+    for (const r of ROWS) pool[r.role] = live.filter(i => layoutRole(i) === r.role);
     for (const r of ROWS) {
       const list = pool[r.role], cur = sel[r.role];
       const valid = cur !== undefined && list.some(i => i.id === cur);
@@ -158,11 +140,6 @@ export function createDressMe(root, { onOpenInCanvas }) {
       </div>
       ${ROWS.map(rowHtml).join('')}
       <div class="dm-dock">
-        <select class="dm-sort" data-sort aria-label="Sort each row by">
-          <option value="none"${sortMode() === 'none' ? ' selected' : ''}>Sort: default</option>
-          <option value="brand"${sortMode() === 'brand' ? ' selected' : ''}>Sort: brand</option>
-          <option value="color"${sortMode() === 'color' ? ' selected' : ''}>Sort: main color</option>
-        </select>
         <div class="seg two" role="group" aria-label="Dice mode"><button class="seg-btn" data-dm="random">Random</button><button class="seg-btn" data-dm="color">Color match</button></div>
         <button class="dm-dice" data-dice aria-label="Roll the dice">${ICON.dice}</button>
         <button class="btn" data-canvas>Open in canvas</button>
@@ -329,12 +306,6 @@ export function createDressMe(root, { onOpenInCanvas }) {
       if (!ids.length) return toast('Pick at least one piece first.', 'error');
       onOpenInCanvas(ids);
     }
-  });
-  root.addEventListener('change', e => {
-    const s = e.target.closest && e.target.closest('[data-sort]');
-    if (!s) return;
-    db.settings.set('dressSort', s.value);
-    load();
   });
   root.addEventListener('keydown', e => {
     const strip = e.target.closest && e.target.closest('.dm-strip');

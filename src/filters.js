@@ -35,8 +35,22 @@ export function applyFilters(items, f, { includeArchivedAlways = false } = {}) {
     }
     return true;
   });
-  out.sort((a, b) => f.sort === 'oldest' ? a.createdAt - b.createdAt : f.sort === 'name' ? a.name.localeCompare(b.name) : b.createdAt - a.createdAt);
+  out.sort((a, b) => compareSort(a, b, f.sort));
   return out;
+}
+
+// Main colour only (colors[0]); pieces with no main colour rank after every known colour.
+const mainColorRank = it => { const i = COLOR_NAMES.indexOf((it.colors && it.colors[0]) || ''); return i < 0 ? COLOR_NAMES.length : i; };
+function compareSort(a, b, sort) {
+  if (sort === 'oldest') return a.createdAt - b.createdAt;
+  if (sort === 'name') return a.name.localeCompare(b.name);
+  if (sort === 'brand') {
+    const ab = (a.brand || '').trim().toLowerCase(), bb = (b.brand || '').trim().toLowerCase();
+    if (!ab !== !bb) return ab ? -1 : 1;          // branded pieces first, unbranded last
+    return ab.localeCompare(bb) || a.name.localeCompare(b.name);
+  }
+  if (sort === 'color') return mainColorRank(a) - mainColorRank(b) || a.name.localeCompare(b.name);
+  return b.createdAt - a.createdAt;               // newest
 }
 
 export function categoryCounts(items, { archived = false } = {}) {
@@ -81,7 +95,9 @@ export function openFilterPanel(filters, items, onApply, opts = {}) {
       <label class="field"><span>Sort</span><select name="sort">
         <option value="newest" ${draft.sort === 'newest' ? 'selected' : ''}>Newest added</option>
         <option value="oldest" ${draft.sort === 'oldest' ? 'selected' : ''}>Oldest added</option>
-        <option value="name" ${draft.sort === 'name' ? 'selected' : ''}>Name A–Z</option></select></label>
+        <option value="name" ${draft.sort === 'name' ? 'selected' : ''}>Name A–Z</option>
+        <option value="brand" ${draft.sort === 'brand' ? 'selected' : ''}>Brand A–Z</option>
+        <option value="color" ${draft.sort === 'color' ? 'selected' : ''}>Main color</option></select></label>
       <div class="form-actions sticky">
         <button type="button" class="btn ghost" data-reset>Reset</button>
         <button type="button" class="btn ghost" data-clear>Clear all</button>
