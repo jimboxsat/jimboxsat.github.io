@@ -35,6 +35,7 @@ Opens on a choice between two modes (or jumps straight into your preferred one):
   - rows **loop infinitely**, wrapping from the last item back to the first
   - the piece resting in the middle of a row is the pick
   - **pin** a row so the dice skips it (a pin button at the top-right of each row on all sizes)
+  - **sort** each row by **brand** or by **main colour** so similar pieces sit together (colour sorting uses each item's main colour only)
   - dice picks a look with **Random** or **Color match**
   - when the weather widget is on, a small weather pill sits next to the Save button and opens the same forecast drop-down, so you can dress for the day ahead
   - pictures are sized so every piece shows fully, even on the smallest phones (the whole screen fits without scrolling)
