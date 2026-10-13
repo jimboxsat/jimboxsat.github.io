@@ -34,9 +34,9 @@ Opens on a choice between two modes (or jumps straight into your preferred one):
 - **Dress me** — swipe rows of Tops, Bottoms and Shoes:
   - rows **loop infinitely**, wrapping from the last item back to the first
   - the piece resting in the middle of a row is the pick
-  - **pin** a row so the dice skips it (floating pin button on mobile, header pin on desktop)
+  - **pin** a row so the dice skips it (a pin button at the top-right of each row on all sizes)
   - dice picks a look with **Random** or **Color match**
-  - when the weather widget is on, a small **Today / Tomorrow** readout at the top shows that day's conditions and high/low, so you can dress for the day ahead
+  - when the weather widget is on, a small weather pill sits next to the Save button and opens the same forecast drop-down, so you can dress for the day ahead
   - pictures are sized so every piece shows fully, even on the smallest phones (the whole screen fits without scrolling)
   - save the look to My Outfits or jump straight into the Canvas with it.
 

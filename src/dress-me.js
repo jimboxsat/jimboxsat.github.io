@@ -49,9 +49,31 @@ export function createDressMe(root, { onOpenInCanvas }) {
   const pinned = { top: false, bottom: false, shoes: false };
   const active = { top: 1, bottom: 1, shoes: 1 };                        // which strip copy holds the highlight and the centered view
   const mode = () => (db.settings.get('dressMode', 'random') === 'color' ? 'color' : 'random');
-  let wxDay = 'today';   // which forecast day the header readout shows
   const byId = id => items.find(i => i.id === id) || null;
   const selected = () => ROWS.map(r => byId(sel[r.role])).filter(Boolean);
+
+  // ---- Weather pill (kept across rebuilds so its listeners bind only once) ----
+  const wxChip = document.createElement('button');
+  wxChip.type = 'button'; wxChip.className = 'home-weather-chip'; wxChip.hidden = true;
+  const wxHost = document.createElement('div');
+  wxHost.className = 'home-dropdown dm-wx-drop'; wxHost.hidden = true;
+  const wxWrap = document.createElement('div');
+  wxWrap.className = 'dm-wx-mini';
+  wxWrap.append(wxChip, wxHost);
+  const weatherWidget = weather.mountWeather({ host: wxHost, chip: wxChip });
+  function renderWxChip() {
+    const on = weather.enabled();
+    wxChip.hidden = !on;
+    if (!on) { wxChip.innerHTML = ''; return; }
+    const c = weather.city(), s = weather.summary();
+    if (!c) { wxChip.innerHTML = '<span class="wc-ico">📍</span><span>Set city</span>'; wxChip.title = 'Pick a city for the forecast.'; return; }
+    const place = c.label.split(',')[0].trim();
+    wxChip.innerHTML = s
+      ? `<span class="wc-ico">${s.ico}</span><span class="wc-temp">${s.temp}°</span><span class="wc-city">${esc(place)}</span>`
+      : '<span class="wc-ico">⛅</span><span>Weather…</span>';
+    wxChip.title = `Weather in ${c.label}. Tap for the forecast.`;
+  }
+  renderWxChip();
 
   async function load() {
     try { items = await db.getItems(); } catch (e) { console.error(e); items = []; }
@@ -65,8 +87,6 @@ export function createDressMe(root, { onOpenInCanvas }) {
       if (!valid) sel[r.role] = list.length ? list[rand(list.length)].id : undefined;
     }
     build();
-    paintWeather();
-    weather.ensure().then(() => paintWeather());
     requestAnimationFrame(() => { sizeRowImages(); paint({ scroll: true, instant: true }); });
   }
 
@@ -104,23 +124,6 @@ export function createDressMe(root, { onOpenInCanvas }) {
     }
   }
 
-  function wxHtml() {
-    if (!weather.enabled() || !weather.city()) return '';
-    return '<div class="dm-wx" id="dm-wx" aria-live="polite"></div>';
-  }
-  function paintWeather() {
-    const el = $('#dm-wx', root); if (!el) return;
-    const f = weather.forecast();
-    const day = f && f.days && f.days.length >= 2 ? f.days[wxDay === 'tomorrow' ? 1 : 0] : null;
-    const seg = `<div class="dm-wx-seg" role="group" aria-label="Forecast day">
-        <button type="button" data-wxday="today" class="${wxDay === 'today' ? 'active' : ''}">Today</button>
-        <button type="button" data-wxday="tomorrow" class="${wxDay === 'tomorrow' ? 'active' : ''}">Tomorrow</button>
-      </div>`;
-    if (!day) { el.innerHTML = `${seg}<span class="dm-wx-cond muted">Weather…</span>`; return; }
-    const [cond, ico] = weather.describe(day.code);
-    el.innerHTML = `${seg}<div class="dm-wx-info"><span class="dm-wx-ico">${ico}</span><span class="dm-wx-cond">${cond}</span><span class="dm-wx-temp">${day.min}°–${day.max}°</span></div>`;
-  }
-
   function build() {
     const have = items.some(i => !i.archived && ROWS.some(r => layoutRole(i) === r.role));
     for (const r of ROWS) active[r.role] = 1;
@@ -134,9 +137,8 @@ export function createDressMe(root, { onOpenInCanvas }) {
       <div class="dm-head">
         <button class="dm-round" data-filter aria-label="Filters">${icons.filter}<span class="badge-count" ${n ? '' : 'hidden'}>${n}</span></button>
         <h2>Dress me</h2>
-        <button class="dm-save" data-save>Save</button>
+        <div class="dm-head-right"><button class="dm-save" data-save>Save</button></div>
       </div>
-      ${wxHtml()}
       ${ROWS.map(rowHtml).join('')}
       <div class="dm-dock">
         <div class="seg two" role="group" aria-label="Dice mode"><button class="seg-btn" data-dm="random">Random</button><button class="seg-btn" data-dm="color">Color match</button></div>
@@ -144,6 +146,8 @@ export function createDressMe(root, { onOpenInCanvas }) {
         <button class="btn" data-canvas>Open in canvas</button>
       </div>
       <p class="dm-note muted small" aria-live="polite"></p></div>`;
+    const right = $('.dm-head-right', root);
+    if (right) right.insertBefore(wxWrap, right.firstElementChild);
   }
 
   // suppressSettle stops settle() from interfering while we scroll programmatically,
@@ -281,8 +285,8 @@ export function createDressMe(root, { onOpenInCanvas }) {
 
   root.addEventListener('click', e => {
     if (e.target.closest('[data-go-closet]')) { root.dispatchEvent(new CustomEvent('goto-closet', { bubbles: true })); return; }
-    const wxBtn = e.target.closest('[data-wxday]');
-    if (wxBtn) { wxDay = wxBtn.dataset.wxday; paintWeather(); return; }
+    const pin = e.target.closest('[data-pin]');
+    if (pin) { const r = pin.dataset.pin; pinned[r] = !pinned[r]; paint(); return; }
     const cell = e.target.closest('.dm-cell');
     if (cell) {
       const row = cell.closest('.dm-row'); const role = row.dataset.role;
@@ -295,8 +299,6 @@ export function createDressMe(root, { onOpenInCanvas }) {
       if (strip) centerOn(strip, cell, false);
       return;
     }
-    const pin = e.target.closest('[data-pin]');
-    if (pin) { const r = pin.dataset.pin; pinned[r] = !pinned[r]; paint(); return; }
     const dm = e.target.closest('[data-dm]');
     if (dm) { db.settings.set('dressMode', dm.dataset.dm); paint(); return; }
     if (e.target.closest('[data-dice]')) return roll();
@@ -337,7 +339,7 @@ export function createDressMe(root, { onOpenInCanvas }) {
   });
 
   db.onChange(debounce(k => { if (k === 'items') load(); }, 80));
-  weather.onWeatherChange(() => { if ($('#dm-wx', root)) paintWeather(); });
+  weather.onWeatherChange(() => { renderWxChip(); weatherWidget.refresh(); });
   const reflow = debounce(() => {
     sizeRowImages();
     paint({ scroll: true, instant: true });
