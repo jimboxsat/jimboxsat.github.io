@@ -16,8 +16,8 @@ export function createCloset(root, { onAddToOutfit, onLoadDemo, onRemoveDemo, on
   root.innerHTML = `
     <div class="home-strip" id="home-strip">
       <strong class="home-greet" id="home-greet"></strong>
-      <span class="home-actions">
-        <button class="home-weather-chip" id="home-weather" type="button">＋ Weather</button>
+      <span class="home-actions" hidden>
+        <button class="home-weather-chip" id="home-weather" type="button" hidden></button>
       </span>
       <div class="home-dropdown" id="home-dropdown" hidden></div>
     </div>
@@ -170,7 +170,11 @@ export function createCloset(root, { onAddToOutfit, onLoadDemo, onRemoveDemo, on
 
   function renderChip() {
     const chip = $('#home-weather', root); if (!chip) return;
-    if (!weather.enabled()) { chip.innerHTML = '<span class="wc-ico">🌤️</span><span>Weather</span>'; chip.title = 'Tap to set up the weather widget.'; return; }
+    const on = weather.enabled();
+    const actions = chip.closest('.home-actions');
+    if (actions) actions.hidden = !on;
+    chip.hidden = !on;
+    if (!on) { chip.innerHTML = ''; return; }
     const c = weather.city(), s = weather.summary();
     if (!c) { chip.innerHTML = '<span class="wc-ico">📍</span><span>Set city</span>'; chip.title = 'Pick a city for the forecast.'; return; }
     const place = c.label.split(',')[0].trim();

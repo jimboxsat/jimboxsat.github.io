@@ -549,9 +549,6 @@ body[data-density="compact"] .grid:not(.dense):not(.outfits) { grid-template-col
 .wx-dt b { font-weight: 700; }
 .wx-dt i { color: var(--muted); font-style: normal; }
 .wx-skel { opacity: .5; }
-.wx-off { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; padding: 6px 0; }
-.wx-off-ico { font-size: 30px; line-height: 1; }
-.wx-off p { margin: 0; }
 .wx-setup { display: flex; flex-direction: column; gap: 10px; }
 .wx-setup-title { font-weight: 600; }
 .wx-setup-row { display: flex; gap: 8px; }

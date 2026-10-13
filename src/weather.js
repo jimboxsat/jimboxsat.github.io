@@ -181,16 +181,8 @@ export function mountWeather({ host, chip }) {
     setTimeout(() => inp.focus(), 30);
   }
 
-  function drawOff() {
-    host.innerHTML = `<div class="wx-off">
-        <span class="wx-off-ico">🌤️</span>
-        <p class="muted small">Weather is off.</p>
-        <button class="btn primary small" data-enable>Turn on weather</button>
-      </div>`;
-  }
-
   function refresh() {
-    if (!enabled()) { drawOff(); return; }
+    if (!enabled()) { close(); return; }
     if (!city()) drawSetup();
     else load();
   }
@@ -198,10 +190,9 @@ export function mountWeather({ host, chip }) {
   host.addEventListener('click', e => {
     if (e.target.closest('[data-close]')) close();
     else if (e.target.closest('[data-retry]')) load();
-    else if (e.target.closest('[data-enable]')) setEnabled(true);
   });
 
-  if (chip) chip.onclick = () => { if (!open && !enabled()) setEnabled(true); open ? close() : openDrop(); };
+  if (chip) chip.onclick = () => { open ? close() : openDrop(); };
   document.addEventListener('pointerdown', e => {
     if (!open) return;
     if (!host.contains(e.target) && !(chip && chip.contains(e.target))) close();
