@@ -12,7 +12,11 @@ export function validateImageFile(file) {
 export function loadImage(src) {
   return new Promise((resolve, reject) => {
     const img = new Image();
-    img.crossOrigin = 'anonymous';
+    // Only ask for CORS on real cross-origin http(s) sources. Setting crossOrigin
+    // on same-origin blob:/data: URLs makes iOS Safari treat them as cross-origin
+    // and taint the canvas, which silently breaks getImageData (e.g. background
+    // removal). crossOrigin must also be set before src on Safari.
+    if (/^https?:/i.test(src)) img.crossOrigin = 'anonymous';
     img.onload = () => resolve(img);
     img.onerror = () => reject(new Error('The image could not be loaded.'));
     img.src = src;

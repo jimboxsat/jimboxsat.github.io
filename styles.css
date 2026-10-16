@@ -451,6 +451,9 @@ body[data-density="compact"] .grid:not(.dense):not(.outfits) { grid-template-col
   .dm-strip { --cw: min(40vw, 150px); }
   .dm-dock { bottom: 82px; } .dm-dock .btn { min-height: 38px; }
   .dm-head h2 { font-size: 20px; }
+  .dm-head { position: relative; }
+  .dm-wx-mini { position: static; }
+  .dm-wx-mini .dm-wx-drop { left: 12px; right: 12px; width: auto; transform: none; }
   .seg { grid-template-columns: repeat(3, 1fr); } .seg.two { grid-template-columns: repeat(2, auto); }
   .shot-search { flex-wrap: wrap; } .shot-search select { width: 100%; }
   .card-del { opacity: 1; }
