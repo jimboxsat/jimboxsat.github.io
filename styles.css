@@ -495,7 +495,7 @@ body[data-density="compact"] .grid:not(.dense):not(.outfits) { grid-template-col
   #ob-dress:not([hidden]) { height: calc(100dvh - 132px); min-height: 0; }
   .dm-row { position: relative; margin: 2px 0; }
   .dm-cell { height: 100%; aspect-ratio: auto; padding: 4px; }
-  .dm-strip { --cw: min(38vw, 180px); padding: 4px calc(50% - var(--cw) / 2); }
+  .dm-strip { --cw: min(38vw, 180px); gap: 4px; padding: 4px calc(50% - var(--cw) / 2); }
   .dm-dock { position: static; margin: 8px auto 0; padding: 8px 12px; gap: 10px; box-shadow: none; }
   .dm-dice { width: 56px; height: 56px; } .dm-dice svg { width: 26px; height: 26px; }
   .dm-note { margin: 6px 0 0; }

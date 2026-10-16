@@ -52,11 +52,17 @@ const colorDist = (r1, g1, b1, r2, g2, b2) => {
 // fade out pixels that match the border colour. Returns a same-size canvas with
 // transparency. No external model, so it works offline and stays on-device.
 const cutoutCache = new WeakMap();
-export function cutoutBackground(img, tol) {
+const nextFrame = () => new Promise(r => (typeof requestAnimationFrame === 'function' ? requestAnimationFrame(() => r()) : setTimeout(r, 16)));
+export async function cutoutBackground(img, tol) {
   const w = img.naturalWidth || img.width, h = img.naturalHeight || img.height;
   const c = document.createElement('canvas'); c.width = w; c.height = h;
   const ctx = c.getContext('2d', { willReadFrequently: true });
   ctx.drawImage(img, 0, 0, w, h);
+  // Some Safari versions hand back a blank buffer when the pixels are read in the
+  // same frame the image was drawn (willReadFrequently only covers Safari 16.4+),
+  // which makes the cutout silently do nothing. Let the draw settle for a frame.
+  if (typeof img.decode === 'function') { try { await img.decode(); } catch { /* already decoded */ } }
+  await nextFrame();
   let data;
   try { data = ctx.getImageData(0, 0, w, h); } catch { return c; } // cross-origin image: leave untouched
   const d = data.data;
@@ -94,7 +100,7 @@ export async function renderEdited(img, { rotate = 0, zoom = 1, offX = 0, offY =
   if (bgRemove) {
     const hit = cutoutCache.get(img);
     if (hit && hit.tol === bgTol) src = hit.canvas;
-    else { src = cutoutBackground(img, bgTol); cutoutCache.set(img, { tol: bgTol, canvas: src }); }
+    else { src = await cutoutBackground(img, bgTol); cutoutCache.set(img, { tol: bgTol, canvas: src }); }
   }
   const rad = rotate * Math.PI / 180;
   const rw = Math.abs(w * Math.cos(rad)) + Math.abs(h * Math.sin(rad));

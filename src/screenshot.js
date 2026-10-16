@@ -103,7 +103,7 @@ function makeCropUI({ m, onDone, onBack, onUnload }) {
       const s = Math.min(1, 1400 / Math.max(box.w, box.h));
       out.width = Math.max(1, Math.round(box.w * s)); out.height = Math.max(1, Math.round(box.h * s));
       out.getContext('2d').drawImage(work, box.x, box.y, box.w, box.h, 0, 0, out.width, out.height);
-      const cut = $('#rmBg', m.el).checked ? cutoutBackground(out, Number($('#tol', m.el).value)) : out;
+      const cut = $('#rmBg', m.el).checked ? await cutoutBackground(out, Number($('#tol', m.el).value)) : out;
       const blob = await canvasToBlob(cut);
       m.close(true); onDone && onDone(blob);
     } catch (e) { console.error(e); toast('Could not crop that image: ' + e.message, 'error'); }
