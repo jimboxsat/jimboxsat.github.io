@@ -165,9 +165,17 @@ export function createCloset(root, { onAddToOutfit, onLoadDemo, onRemoveDemo, on
   function renderHome() {
     const p = db.getProfile();
     const el = $('#home-greet', root);
-    el.innerHTML = p.nickname
-      ? `<span class="home-greet-line">${greetingLine()}</span><span class="home-name">${esc(p.nickname)}</span>`
-      : `<span class="home-greet-line">${greetingLine()}</span>`;
+    if (p.nickname) {
+      const h = new Date().getHours();
+      const text = h < 5 ? 'Up late' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : h < 21 ? 'Good evening' : 'Good evening';
+      const emoji = h < 5 ? '🌙' : h < 12 ? '☀️' : h < 18 ? '🌞' : h < 21 ? '🌆' : '🌙';
+      el.innerHTML = `<span class="home-greet-line">${emoji} ${text},</span><span class="home-name">${esc(p.nickname)}</span>`;
+    } else {
+      const h = new Date().getHours();
+      const text = h < 5 ? 'Up late' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : h < 21 ? 'Good evening' : 'Good evening';
+      const emoji = h < 5 ? '🌙' : h < 12 ? '☀️' : h < 18 ? '🌞' : h < 21 ? '🌆' : '🌙';
+      el.innerHTML = `<span class="home-greet-line">${emoji} ${text},</span>`;
+    }
     renderChip();
   }
 
