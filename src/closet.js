@@ -16,7 +16,6 @@ export function createCloset(root, { onAddToOutfit, onLoadDemo, onRemoveDemo, on
   root.innerHTML = `
     <div class="home-strip" id="home-strip">
       <div class="home-hero">
-        <strong class="home-greet" id="home-greet"></strong>
         <p class="home-headline">Your Closet, <em>Reimagined.</em></p>
         <div class="home-shortcuts">
           <button class="btn primary" data-home-short="add">${icons.plus}<span>Add item</span></button>
@@ -27,6 +26,7 @@ export function createCloset(root, { onAddToOutfit, onLoadDemo, onRemoveDemo, on
       <span class="home-actions" hidden>
         <button class="home-weather-chip" id="home-weather" type="button" hidden></button>
         <div class="home-dropdown" id="home-dropdown" hidden></div>
+        <strong class="home-greet" id="home-greet"></strong>
       </span>
     </div>
     <div class="page-head">
