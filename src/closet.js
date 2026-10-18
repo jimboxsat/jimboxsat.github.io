@@ -15,16 +15,19 @@ export function createCloset(root, { onAddToOutfit, onLoadDemo, onRemoveDemo, on
 
   root.innerHTML = `
     <div class="home-strip" id="home-strip">
-      <strong class="home-greet" id="home-greet"></strong>
+      <div class="home-hero">
+        <strong class="home-greet" id="home-greet"></strong>
+        <p class="home-headline">Your Closet, <em>Reimagined.</em></p>
+        <div class="home-shortcuts">
+          <button class="btn primary" data-home-short="add">${icons.plus}<span>Add item</span></button>
+          <button class="btn ghost" data-home-short="dress">Dress me</button>
+          <button class="btn ghost" data-home-short="canvas">Canvas</button>
+        </div>
+      </div>
       <span class="home-actions" hidden>
         <button class="home-weather-chip" id="home-weather" type="button" hidden></button>
+        <div class="home-dropdown" id="home-dropdown" hidden></div>
       </span>
-      <div class="home-dropdown" id="home-dropdown" hidden></div>
-    </div>
-    <div class="home-shortcuts">
-      <button class="btn primary" data-home-short="add">${icons.plus}<span>Add item</span></button>
-      <button class="btn ghost" data-home-short="dress">Dress me</button>
-      <button class="btn ghost" data-home-short="canvas">Canvas</button>
     </div>
     <div class="page-head">
       <div><h1 id="cl-title">My Closet</h1><p class="muted" id="cl-count" aria-live="polite"></p></div>
