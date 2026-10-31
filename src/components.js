@@ -95,7 +95,7 @@ export function confirmDialog({ title, message, confirmText = 'Confirm', danger 
   });
 }
 
-export function itemCard(item, { selected = false, selectable = false, showFav = true, lazy = true, deletable = false } = {}) {
+export function itemCard(item, { selected = false, selectable = false, showFav = true, lazy = true, archivable = false } = {}) {
   const el = document.createElement('article');
   el.className = 'card' + (selected ? ' selected' : '') + (item.archived ? ' archived' : '');
   el.dataset.id = item.id;
@@ -105,7 +105,7 @@ export function itemCard(item, { selected = false, selectable = false, showFav =
       <span class="card-meta"><span class="card-name">${esc(item.name)}</span>
       <span class="card-sub">${esc(item.brand || item.subcategory || item.category)}</span></span>
     </button>
-    ${deletable ? `<button class="card-del" data-del aria-label="Delete ${esc(item.name)}">${icons.trash}</button>` : ''}
+    ${archivable ? `<button class="card-arch" data-arch aria-label="Archive ${esc(item.name)}">${icons.archive}</button>` : ''}
     ${item.demo ? '<span class="badge demo">Sample</span>' : ''}
     ${item.archived ? '<span class="badge arch">Archived</span>' : ''}
     ${showFav ? `<button class="fav ${item.favorite ? 'on' : ''}" data-fav aria-label="${item.favorite ? 'Unfavorite' : 'Favorite'} ${esc(item.name)}" aria-pressed="${!!item.favorite}">${icons.star}</button>` : ''}

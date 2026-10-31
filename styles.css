@@ -324,11 +324,11 @@ dt { color: var(--muted); font-size: 13px; padding-top: 3px; } dd { margin: 0; }
 .seg.two .seg-btn { padding: 7px 14px; font-size: 13px; }
 kbd { font: inherit; font-size: 12px; background: var(--surface-2); border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 5px; padding: 0 5px; }
 
-/* delete on cards */
-.card-del { position: absolute; top: 10px; left: 10px; width: 32px; height: 32px; border-radius: 50%; border: 0; background: rgba(255,253,249,.92); display: grid; place-items: center; opacity: 0; transition: opacity .15s; color: #1f1f21; }
-.card-del svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-.card:hover .card-del, .card-del:focus-visible { opacity: 1; } .card-del:hover { background: #fde4e1; color: var(--danger); }
-@media (hover: none) { .card-del { opacity: 1; } }
+/* archive on cards */
+.card-arch { position: absolute; top: 10px; left: 10px; width: 32px; height: 32px; border-radius: 50%; border: 0; background: rgba(255,253,249,.92); display: grid; place-items: center; opacity: 0; transition: opacity .15s; color: #1f1f21; }
+.card-arch svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.card:hover .card-arch, .card-arch:focus-visible { opacity: 1; } .card-arch:hover { background: #e7edfb; color: var(--accent); }
+@media (hover: none) { .card-arch { opacity: 1; } }
 .card .badge.arch { right: 54px; }
 body[data-density="compact"] .grid:not(.dense):not(.outfits) { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
 @media (max-width: 900px) { body[data-density="compact"] .grid:not(.dense):not(.outfits) { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; } }
@@ -441,8 +441,8 @@ body[data-density="compact"] .grid:not(.dense):not(.outfits) { grid-template-col
 [data-theme="dark"] .btn.primary:hover:not(:disabled) { background: #3157d6; }
 [data-theme="dark"] .banner { background: #3a3220; }
 [data-theme="dark"] .badge { background: #5a4a22; color: #f3e6c0; } [data-theme="dark"] .card .badge.arch { background: #444; color: #ddd; }
-[data-theme="dark"] .btn.danger-ghost:hover:not(:disabled), [data-theme="dark"] .card-del:hover { background: #3a2220; }
-[data-theme="dark"] .card-del:hover { color: #ff9288; }
+[data-theme="dark"] .btn.danger-ghost:hover:not(:disabled) { background: #3a2220; }
+[data-theme="dark"] .card-arch:hover { background: #1f2740; color: #9db6ff; }
 [data-theme="dark"] .modal-backdrop { background: rgba(0,0,0,.65); }
 [data-theme="dark"] .pill.removable:hover { background: #3a362f; }
 [data-theme="dark"] .dropzone { border-color: #4a453c; }
@@ -454,7 +454,7 @@ body[data-density="compact"] .grid:not(.dense):not(.outfits) { grid-template-col
 .handle { background: #1f1f21; } .piece.selected { outline-color: #1f1f21; }
 .card.selected .card-hit { border-color: var(--text); }
 .badge-count { color: var(--text-ink); }
-.card-del, .peek, .fav { color: #1f1f21; }
+.card-arch, .peek, .fav { color: #1f1f21; }
 
 @media (max-width: 900px) {
   .bottom-nav { grid-template-columns: repeat(2, 1fr); } .bottom-nav .nav-btn { padding: 12px 4px; font-size: 14px; }
@@ -471,7 +471,7 @@ body[data-density="compact"] .grid:not(.dense):not(.outfits) { grid-template-col
   .dm-wx-mini .dm-wx-drop { left: 12px; right: 12px; width: auto; transform: none; }
   .seg { grid-template-columns: repeat(3, 1fr); } .seg.two { grid-template-columns: repeat(2, auto); }
   .shot-search { flex-wrap: wrap; } .shot-search select { width: 100%; }
-  .card-del { opacity: 1; }
+  .card-arch { opacity: 1; }
 }
 
 /* ---- fixes: tall garments must never stretch their card; Dress me fits one screen; toast contrast ---- */

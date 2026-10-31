@@ -133,7 +133,7 @@ export function createCloset(root, { onAddToOutfit, onLoadDemo, onRemoveDemo, on
     }
     const frag = document.createDocumentFragment();
     shown.forEach(i => {
-      const c = itemCard(i, { deletable: !viewing }); c.setAttribute('role', 'listitem');
+      const c = itemCard(i, { archivable: !viewing }); c.setAttribute('role', 'listitem');
       if (viewing) {
         const on = selected.has(i.id);
         const pick = document.createElement('button');
@@ -291,7 +291,7 @@ export function createCloset(root, { onAddToOutfit, onLoadDemo, onRemoveDemo, on
       try { await db.updateItem(id, { favorite: !it.favorite }); } catch (err) { toast('Could not update favorite', 'error'); }
       return;
     }
-    if (e.target.closest('[data-del]')) { await removeItem(id); return; }
+    if (e.target.closest('[data-arch]')) { await archiveItem(id); return; }
     if (e.target.closest('[data-open]')) openItemDetails(id, { onAddToOutfit, onChanged: () => {} });
   });
 
@@ -314,6 +314,12 @@ export function createCloset(root, { onAddToOutfit, onLoadDemo, onRemoveDemo, on
       toast(`${updated.length} item${updated.length === 1 ? '' : 's'} unarchived`, 'success');
       selected.clear();
     } catch (err) { toast('Could not unarchive: ' + err.message, 'error'); btn.disabled = false; }
+  }
+
+  async function archiveItem(id) {
+    const it = items.find(i => i.id === id); if (!it) return;
+    try { await db.archiveItem(id, true); toast(`"${it.name}" archived`, 'success'); }
+    catch (err) { toast('Could not archive: ' + err.message, 'error'); }
   }
 
   async function removeItem(id) {
