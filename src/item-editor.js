@@ -4,6 +4,64 @@ import { esc, $, $$, openModal, toast, confirmDialog, icons } from './components
 import { openImageCropper } from './screenshot.js';
 import { validateImageFile, blobToImage, loadImage, renderEdited, normalizeBlob, imgSrc, canvasToBlob } from './image-utils.js';
 
+// ---- custom dropdown (replaces native <select> in the details form) ----
+// Keeps a hidden input with the same name so existing form.*.value reads keep working.
+function cselectHtml({ name = '', value = '', options, dots = false, id = '', aria = '' }) {
+  const cur = options.find(o => o.value === value) || options[0];
+  const dotFor = v => (dots && v) ? `<i class="dot" style="background:${COLORS[v] || '#ccc'}"></i>` : '';
+  const optHtml = o => {
+    const on = o === cur;
+    return `<button type="button" role="option" class="cselect-opt${on ? ' selected' : ''}" data-value="${esc(o.value)}" aria-selected="${on}">${dotFor(o.value)}<span>${esc(o.label)}</span></button>`;
+  };
+  const ariaAttr = aria ? ` aria-label="${esc(aria)}"` : '';
+  return `<div class="cselect"${id ? ` id="${id}"` : ''} data-cselect>
+    <input type="hidden" name="${esc(name)}" value="${esc(cur.value)}">
+    <button type="button" class="cselect-btn" aria-haspopup="listbox" aria-expanded="false"${ariaAttr}><span class="cselect-val">${dotFor(cur.value)}<span>${esc(cur.label)}</span></span><svg class="cselect-caret" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+    <div class="cselect-menu" role="listbox" hidden>${options.map(optHtml).join('')}</div>
+  </div>`;
+}
+
+function wireCselect(wrap, root, { onChange } = {}) {
+  if (!wrap) return { reset() {}, get value() { return ''; } };
+  const btn = wrap.querySelector('.cselect-btn');
+  const menu = wrap.querySelector('.cselect-menu');
+  const valEl = wrap.querySelector('.cselect-val');
+  const input = wrap.querySelector('input[type="hidden"]');
+  const opts = [...menu.querySelectorAll('.cselect-opt')];
+  const closeAll = except => root.querySelectorAll('[data-cselect]').forEach(s => {
+    if (s === except) return;
+    const mm = s.querySelector('.cselect-menu'), bb = s.querySelector('.cselect-btn');
+    if (mm) mm.hidden = true;
+    if (bb) bb.setAttribute('aria-expanded', 'false');
+  });
+  const apply = (li, fire) => {
+    opts.forEach(o => { const on = o === li; o.classList.toggle('selected', on); o.setAttribute('aria-selected', String(on)); });
+    valEl.innerHTML = li.innerHTML;
+    input.value = li.dataset.value;
+    menu.hidden = true; btn.setAttribute('aria-expanded', 'false');
+    if (fire) {
+      if (onChange) onChange(li.dataset.value);
+      else {
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    }
+  };
+  btn.addEventListener('click', e => {
+    e.stopPropagation();
+    const willOpen = menu.hidden;
+    closeAll(wrap);
+    menu.hidden = !willOpen;
+    btn.setAttribute('aria-expanded', String(willOpen));
+  });
+  menu.addEventListener('click', e => { const li = e.target.closest('.cselect-opt'); if (li) { e.preventDefault(); apply(li, true); } });
+  return {
+    el: wrap,
+    get value() { return input.value; },
+    reset() { const li = opts.find(o => o.dataset.value === ''); if (li) apply(li, false); }
+  };
+}
+
 export function openItemEditor(existing = null, { onSaved, initialBlob = null } = {}) {
   const editing = !!existing;
   const state = {
@@ -69,14 +127,14 @@ export function openItemEditor(existing = null, { onSaved, initialBlob = null } 
         <label class="field"><span>Name *</span><input name="name" maxlength="80" required autocomplete="off" value="${esc(existing?.name || '')}" autofocus><em class="err" data-err="name"></em></label>
         <div class="row2">
           <label class="field"><span>Brand</span><input name="brand" list="brandList" maxlength="60" value="${esc(existing?.brand || '')}"><datalist id="brandList"></datalist></label>
-          <label class="field"><span>Main color</span><select name="mainColor"><option value="">—</option>${COLOR_NAMES.map(c => `<option ${existing?.colors?.[0] === c ? 'selected' : ''}>${c}</option>`).join('')}</select></label>
+          <div class="field"><span>Main color</span>${cselectHtml({ name: 'mainColor', value: existing?.colors?.[0] || '', options: [{ value: '', label: '—' }, ...COLOR_NAMES.map(c => ({ value: c, label: c }))], dots: true, aria: 'Main color' })}</div>
         </div>
         <div class="row2">
-          <label class="field"><span>Category *</span><select name="category">${[...MAIN_CATEGORIES, ...(known || !existing ? [] : [existing.category]), '＋ Custom…'].map(c => `<option ${c === cat0 ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select></label>
+          <div class="field"><span>Category *</span>${cselectHtml({ name: 'category', value: cat0, options: [...MAIN_CATEGORIES, ...(known || !existing ? [] : [existing.category]), '＋ Custom…'].map(c => ({ value: c, label: c })), aria: 'Category' })}</div>
           <label class="field"><span>Subcategory</span><input name="subcategory" list="subList" maxlength="40" value="${esc(existing?.subcategory || '')}"><datalist id="subList"></datalist></label>
         </div>
         <label class="field" id="customCatWrap" hidden><span>Custom category name</span><input name="customCategory" maxlength="30"><em class="err" data-err="customCategory"></em></label>
-        <fieldset><legend>Additional colors</legend><select id="addColorSel" aria-label="Add an additional color"><option value="">Choose a color…</option>${COLOR_NAMES.map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join('')}</select><div class="chips wrap color-pills" id="colorChips"></div></fieldset>
+        <fieldset><legend>Additional colors</legend>${cselectHtml({ id: 'addColorSel', value: '', options: [{ value: '', label: 'Choose a color…' }, ...COLOR_NAMES.map(c => ({ value: c, label: c }))], dots: true, aria: 'Add an additional color' })}<div class="chips wrap color-pills" id="colorChips"></div></fieldset>
         <fieldset><legend>Season</legend><div class="chips wrap" id="seasonChips"></div></fieldset>
         <fieldset><legend>Occasion</legend><div class="chips wrap" id="occChips"></div></fieldset>
         <div class="field"><span>Style tags</span>
@@ -136,10 +194,14 @@ export function openItemEditor(existing = null, { onSaved, initialBlob = null } 
     draw();
     el.onclick = e => { const b = e.target.closest('[data-v]'); if (!b) return; const v = b.dataset.v; const i = arr.indexOf(v); i >= 0 ? arr.splice(i, 1) : arr.length < max && arr.push(v); state.dirty = true; draw(); };
   };
-  // Additional colors: choose from a dropdown, remove with a tap
-  const colorSel = $('#addColorSel', m.el), colorPills = $('#colorChips', m.el);
+  // Additional colors: choose from a custom dropdown, remove with a tap
+  const colorPills = $('#colorChips', m.el);
   const drawColors = () => { colorPills.innerHTML = state.colors.map(c => `<span class="pill removable"><i class="dot" style="background:${COLORS[c] || '#ccc'}"></i>${esc(c)}<button type="button" data-rmc="${esc(c)}" aria-label="Remove ${esc(c)}">×</button></span>`).join(''); };
-  colorSel.onchange = () => { const v = colorSel.value; colorSel.value = ''; if (!v || state.colors.includes(v)) return; state.colors.push(v); state.dirty = true; drawColors(); };
+  let addColorSel;
+  addColorSel = wireCselect($('#addColorSel', m.el), m.el, { onChange: v => {
+    if (v && !state.colors.includes(v)) { state.colors.push(v); state.dirty = true; drawColors(); }
+    addColorSel.reset();
+  } });
   colorPills.onclick = e => { const b = e.target.closest('[data-rmc]'); if (!b) return; state.colors = state.colors.filter(c => c !== b.dataset.rmc); state.dirty = true; drawColors(); };
   drawColors();
   chipSet($('#seasonChips', m.el), SEASONS, state.season);
@@ -163,6 +225,14 @@ export function openItemEditor(existing = null, { onSaved, initialBlob = null } 
   };
   form.category.onchange = () => { syncSubs(); if (form.category.value !== '＋ Custom…') form.subcategory.value = form.subcategory.value && (CATEGORIES[form.category.value] || []).includes(form.subcategory.value) ? form.subcategory.value : ''; };
   syncSubs();
+
+  // ---- custom dropdowns (main color + category)
+  wireCselect($('[name="mainColor"]', m.el).closest('[data-cselect]'), m.el);
+  wireCselect($('[name="category"]', m.el).closest('[data-cselect]'), m.el);
+  m.el.addEventListener('click', e => {
+    if (e.target.closest('[data-cselect]')) return;
+    $$('[data-cselect]', m.el).forEach(s => { s.querySelector('.cselect-menu').hidden = true; s.querySelector('.cselect-btn').setAttribute('aria-expanded', 'false'); });
+  });
 
   // ---- image handling
   const preview = $('#imgPreview', m.el), tools = $('#imgTools', m.el), imgErr = $('#imgErr', m.el);

@@ -71,6 +71,21 @@ main { max-width: 1480px; margin: 0 auto; padding: 28px; }
 input[type=text], input[type=search], input[type=url], input[type=number], input[type=date], input:not([type]), select, textarea {
   width: 100%; border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius-sm); padding: 10px 12px; min-height: 42px; }
 textarea { resize: vertical; }
+
+/* custom select (replaces native <select>) */
+.cselect { position: relative; }
+.cselect-btn { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px; border: 1px solid var(--line); background: var(--surface); border-radius: var(--radius-sm); padding: 10px 12px; min-height: 42px; text-align: left; }
+.cselect-btn:hover { border-color: #bdb5a4; }
+.cselect-val { display: inline-flex; align-items: center; gap: 8px; min-width: 0; overflow: hidden; }
+.cselect-val > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cselect-caret { width: 16px; height: 16px; flex: none; fill: none; stroke: var(--muted); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; transition: transform .15s; }
+.cselect-btn[aria-expanded="true"] .cselect-caret { transform: rotate(180deg); }
+.cselect-menu { position: absolute; top: calc(100% + 6px); left: 0; right: 0; z-index: 60; max-height: 260px; overflow-y: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 16px 40px rgba(0,0,0,.16); padding: 6px; }
+.cselect-opt { display: flex; align-items: center; gap: 8px; width: 100%; border: 0; background: transparent; text-align: left; padding: 9px 10px; border-radius: 9px; color: var(--text); }
+.cselect-opt:hover { background: var(--surface-2); }
+.cselect-opt.selected { background: var(--surface-2); font-weight: 600; }
+.cselect-opt .dot { flex: none; }
+
 fieldset { border: 0; padding: 0; margin: 0 0 14px; }
 legend { padding: 0; margin-bottom: 6px; }
 .check { display: flex; align-items: center; gap: 8px; margin: 8px 0; }
