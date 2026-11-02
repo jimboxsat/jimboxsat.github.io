@@ -4,7 +4,7 @@ import { newFilters, activeCount, applyFilters, renderCategoryTabs, openFilterPa
 import { openItemEditor, openItemDetails } from './item-editor.js';
 import { imgSrc, pruneUrlCache } from './image-utils.js';
 import * as weather from './weather.js';
-import { t, tr } from './i18n.js';
+import { t, tr, tf } from './i18n.js';
 
 export function createCloset(root, { onAddToOutfit, onLoadDemo, onRemoveDemo, onOpenDressMe, onOpenCanvas, onOpenOutfit, onExportOutfit, onDeleteOutfit }) {
   const filters = newFilters();
@@ -160,7 +160,7 @@ export function createCloset(root, { onAddToOutfit, onLoadDemo, onRemoveDemo, on
   function greetingLine() {
     const h = new Date().getHours();
     const [text, emoji] = h < 5 ? ['Up late,', '🌙'] : h < 12 ? ['Good morning,', '☀️'] : h < 18 ? ['Good afternoon,', '🌞'] : h < 21 ? ['Good evening,', '🌆'] : ['Good evening,', '🌙'];
-    return `<span class="home-greet-text">${text}</span> <span class="home-greet-emoji">${emoji}</span>`;
+    return `<span class="home-greet-text">${esc(t(text))}</span> <span class="home-greet-emoji">${emoji}</span>`;
   }
 
   function renderHome() {
@@ -170,12 +170,12 @@ export function createCloset(root, { onAddToOutfit, onLoadDemo, onRemoveDemo, on
       const h = new Date().getHours();
       const text = h < 5 ? 'Up late' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : h < 21 ? 'Good evening' : 'Good evening';
       const emoji = h < 5 ? '🌙' : h < 12 ? '☀️' : h < 18 ? '🌞' : h < 21 ? '🌆' : '🌙';
-      el.innerHTML = `<span class="home-greet-line">${emoji} ${text},</span><span class="home-name">${esc(p.nickname)}</span>`;
+      el.innerHTML = `<span class="home-greet-line">${emoji} ${esc(t(text))},</span><span class="home-name">${esc(p.nickname)}</span>`;
     } else {
       const h = new Date().getHours();
       const text = h < 5 ? 'Up late' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : h < 21 ? 'Good evening' : 'Good evening';
       const emoji = h < 5 ? '🌙' : h < 12 ? '☀️' : h < 18 ? '🌞' : h < 21 ? '🌆' : '🌙';
-      el.innerHTML = `<span class="home-greet-line">${emoji} ${text},</span>`;
+      el.innerHTML = `<span class="home-greet-line">${emoji} ${esc(t(text))},</span>`;
     }
     renderChip();
   }
@@ -188,12 +188,12 @@ export function createCloset(root, { onAddToOutfit, onLoadDemo, onRemoveDemo, on
     chip.hidden = !on;
     if (!on) { chip.innerHTML = ''; return; }
     const c = weather.city(), s = weather.summary();
-    if (!c) { chip.innerHTML = '<span class="wc-ico">📍</span><span>Set city</span>'; chip.title = 'Pick a city for the forecast.'; return; }
+    if (!c) { chip.innerHTML = tr`<span class="wc-ico">📍</span><span>Set city</span>`; chip.title = t('Pick a city for the forecast.'); return; }
     const place = c.label.split(',')[0].trim();
     chip.innerHTML = s
       ? `<span class="wc-ico">${s.ico}</span><span class="wc-temp">${s.temp}°</span><span class="wc-city">${esc(place)}</span>`
-      : '<span class="wc-ico">⛅</span><span>Weather…</span>';
-    chip.title = `Weather in ${c.label}. Tap for the forecast.`;
+      : tr`<span class="wc-ico">⛅</span><span>Weather…</span>`;
+    chip.title = tf('Weather in {city}. Tap for the forecast.', { city: c.label });
   }
 
   function wireHome() {

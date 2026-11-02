@@ -197,7 +197,7 @@ export function openItemEditor(existing = null, { onSaved, initialBlob = null } 
   };
   // Additional colors: choose from a custom dropdown, remove with a tap
   const colorPills = $('#colorChips', m.el);
-  const drawColors = () => { colorPills.innerHTML = state.colors.map(c => `<span class="pill removable"><i class="dot" style="background:${COLORS[c] || '#ccc'}"></i>${esc(c)}<button type="button" data-rmc="${esc(c)}" aria-label="Remove ${esc(c)}">×</button></span>`).join(''); };
+  const drawColors = () => { colorPills.innerHTML = state.colors.map(c => `<span class="pill removable"><i class="dot" style="background:${COLORS[c] || '#ccc'}"></i>${esc(t(c))}<button type="button" data-rmc="${esc(c)}" aria-label="${esc(t('Remove'))} ${esc(t(c))}">×</button></span>`).join(''); };
   let addColorSel;
   addColorSel = wireCselect($('#addColorSel', m.el), m.el, { onChange: v => {
     if (v && !state.colors.includes(v)) { state.colors.push(v); state.dirty = true; drawColors(); }
@@ -410,7 +410,7 @@ export async function openItemDetails(itemId, { onAddToOutfit, onChanged } = {})
         <p class="muted">${esc(item.brand || 'No brand')}</p>
         <dl>
           <dt>Category</dt><dd>${esc(item.category)}${item.subcategory ? ' · ' + esc(item.subcategory) : ''}</dd>
-          <dt>Colors</dt><dd>${cs.length ? cs.map(c => `<span class="pill"><i class="dot" style="background:${COLORS[c] || '#ccc'}"></i>${esc(c)}</span>`).join('') : '<span class="muted">—</span>'}</dd>
+          <dt>Colors</dt><dd>${cs.length ? cs.map(c => `<span class="pill"><i class="dot" style="background:${COLORS[c] || '#ccc'}"></i>${esc(t(c))}</span>`).join('') : '<span class="muted">—</span>'}</dd>
           <dt>Season</dt><dd>${chips(item.season)}</dd>
           <dt>Occasion</dt><dd>${chips(item.occasions)}</dd>
           <dt>Tags</dt><dd>${chips(item.tags)}</dd>

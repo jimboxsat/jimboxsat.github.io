@@ -6,7 +6,7 @@ import * as db from './database.js';
 import * as gdrive from './gdrive.js';
 import * as notif from './notifications.js';
 import { setTheme } from './settings.js';
-import { t, tr, lang, setLang, LANGS, LANG_LABEL } from './i18n.js';
+import { t, tr, tf, lang, setLang, LANGS, LANG_LABEL } from './i18n.js';
 
 
 // Notifications created before the phrase dictionary existed stored key names; map them to text.
@@ -116,18 +116,30 @@ export function createTopMenu({ onSettings, onConnectDrive } = {}) {
   // ---------- notifications panel ----------
   function when(at) {
     const s = Math.round((Date.now() - at) / 1000);
+    if (lang() !== 'en') {
+      const relative = new Intl.RelativeTimeFormat(lang(), { numeric: 'auto' });
+      if (s < 60) return relative.format(0, 'second');
+      if (s < 3600) return relative.format(-Math.round(s / 60), 'minute');
+      if (s < 86400) return relative.format(-Math.round(s / 3600), 'hour');
+      if (s < 604800) return relative.format(-Math.round(s / 86400), 'day');
+    }
     if (s < 60) return t('just now');
     const m = Math.round(s / 60); if (m < 60) return `${m} ${t('m ago')}`;
     const h = Math.round(m / 60); if (h < 24) return `${h} ${t('h ago')}`;
     const d = Math.round(h / 24); if (d < 7) return `${d} ${t('d ago')}`;
-    return new Date(at).toLocaleDateString();
+    return new Date(at).toLocaleDateString(lang());
   }
 
   function renderNotif() {
     const items = notif.list();
     const rows = items.map(n => {
       const title = esc(t(LEGACY[n.titleKey] || n.title || ''));
-      const body = esc(t(LEGACY[n.bodyKey] || n.body || ''));
+      const source = LEGACY[n.bodyKey] || n.body || '';
+      // Also localize sync entries already saved in English before language support.
+      const sync = n.kind === 'sync' && /^(\d+) items? · (\d+) outfits?( · merged with Drive)?$/.exec(source);
+      const body = esc(sync
+        ? tf('{items} items · {outfits} outfits', { items: sync[1], outfits: sync[2] }) + (sync[3] ? ' · ' + t('merged with Drive') : '')
+        : t(source));
       return `<li class="notif-item${n.read ? '' : ' unread'}">
         <strong>${title}</strong>
         ${body ? `<p>${body}</p>` : ''}
@@ -152,7 +164,7 @@ export function createTopMenu({ onSettings, onConnectDrive } = {}) {
       body: tr`<div class="pf-head">
           <span class="pf-avatar" aria-hidden="true">${name ? esc(name.charAt(0).toUpperCase()) : icons.user}</span>
           <div><p class="pf-name">${esc(name || t('No name yet'))}</p>
-          <p class="muted small">${items.length} item${items.length === 1 ? '' : 's'} · ${outfits.length} outfit${outfits.length === 1 ? '' : 's'}</p></div>
+          <p class="muted small">${esc(tf('{items} items · {outfits} outfits', { items: items.length, outfits: outfits.length }))}</p></div>
         </div>
         <label class="field"><span>${esc(t('Your name'))}</span><input id="pfName" maxlength="30" value="${esc(name)}" placeholder="e.g. Alex" autocomplete="nickname"></label>
         <p class="muted small">${esc(t('Used for the greeting on your home page. Everything stays on this device.'))}</p>
@@ -180,12 +192,12 @@ export function createTopMenu({ onSettings, onConnectDrive } = {}) {
     try {
       const r = await gdrive.sync();          // resolves only after the Drive upload and local merge
       const detail = `${r.items} item${r.items === 1 ? '' : 's'} · ${r.outfits} outfit${r.outfits === 1 ? '' : 's'}`;
-      toast(`${t('Sync completed successfully.')} ${detail}.`, 'success');
+      toast(`${t('Sync completed successfully.')} ${tf('{items} items · {outfits} outfits', { items: r.items, outfits: r.outfits })}.`, 'success');
       notif.add({ kind: 'sync', title: 'Google Drive synced', body: detail + (r.fromDrive ? ' · merged with Drive' : '') });
       updateIndicators();
     } catch (err) {
       console.error(err);
-      toast((err && err.message) || t('Synchronization failed.'), 'error');
+      toast(t(err && err.message) || t('Synchronization failed.'), 'error');
     } finally {
       syncBtn.removeAttribute('aria-busy');
       syncBtn.classList.remove('busy');

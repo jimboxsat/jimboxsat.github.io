@@ -1,5 +1,5 @@
 // Language support. The dictionary is keyed by the English source string and generated from
-// translations/greek-string-list.md, so the same text you see in the interface is the key you
+// translations/greek-string-list.md and greek-todo.md. The interface text is the key you
 // fill in there. Anything without a Greek entry simply stays English — nothing breaks.
 import * as db from './database.js';
 
@@ -395,6 +395,129 @@ const EL = {
   '⟳ Rotate': '⟳ Περιστροφή',
   '⤮ Shuffle': '⤮ Ανακάτεμα',
   '＋ Custom…': '＋ Προσαρμοσμένη…',
+  // Additional wording supplied in translations/greek-todo.md.
+  "(add": "(προσθήκη",
+  "(works best on white or single-colour backgrounds)": "(λειτουργεί καλύτερα σε λευκό ή μονόχρωμο φόντο)",
+  ", drop an image here, or click to choose a file": ", σύρετε μια εικόνα εδώ ή κάντε κλικ για να επιλέξετε ένα αρχείο",
+  "@jimboxsat": "@jimboxsat",
+  "add your site (e.g. http://localhost:8080 and your GitHub Pages URL). Paste the client ID above.": "προσθέστε τον ιστότοπό σας (π.χ. http://localhost:8080 και τη διεύθυνση URL του GitHub Pages σας). Επικολλήστε το αναγνωριστικό πελάτη παραπάνω.",
+  "Apply": "Εφαρμογή",
+  "Choose an item to replace": "Επιλέξτε ένα είδος για αντικατάσταση",
+  "d ago": "ημ. πριν",
+  "Dark theme": "Σκούρο θέμα",
+  "Drag a piece to move it and drag the round handle to resize. With a piece focused: arrow keys nudge (Shift for bigger steps), + and − resize, R rotates, [ and ] change layers, Delete removes. Pin a piece to keep it when you press Shuffle.": "Σύρετε ένα κομμάτι για να το μετακινήσετε και χρησιμοποιήστε τη στρογγυλή λαβή για να αλλάξετε το μέγεθός του. Όταν ένα κομμάτι είναι επιλεγμένο, τα πλήκτρα με τα βέλη το μετακινούν (κρατήστε πατημένο το Shift για μεγαλύτερα βήματα), τα + και − αλλάζουν το μέγεθος, το R το περιστρέφει, τα [ και ] αλλάζουν τη σειρά των επιπέδων και το Delete το αφαιρεί. Καρφιτσώστε ένα κομμάτι για να παραμείνει στη θέση του όταν πατήσετε «Ανακάτεμα».",
+  "e.g. black leather ankle boots": "π.χ. μαύρα δερμάτινα μποτάκια",
+  "Exports at 1600 × 2000 px without any editor controls.": "Εξάγεται σε ανάλυση 1600 × 2000 px, χωρίς να εμφανίζονται τα χειριστήρια επεξεργασίας.",
+  "Feels {temperature}°": "Αισθητή θερμοκρασία {temperature}°",
+  "Google Drive not connected.": "Το Google Drive δεν είναι συνδεδεμένο.",
+  "Google Drive synced": "Το Google Drive συγχρονίστηκε",
+  "h ago": "ώρ. πριν",
+  "https://…/garment.png": "https://…/garment.png",
+  "In the item form, choose Upload and paste or drop a screenshot of the item — it opens in the crop view. Search the web in a new tab, screenshot the item, and paste it here.": "Στη φόρμα προσθήκης είδους, επιλέξτε «Μεταφόρτωση» και επικολλήστε ή σύρετε ένα στιγμιότυπο οθόνης του είδους. Η εικόνα θα ανοίξει στο εργαλείο περικοπής. Αναζητήστε το είδος στο διαδίκτυο σε νέα καρτέλα, τραβήξτε ένα στιγμιότυπο οθόνης και επικολλήστε το εδώ.",
+  "item": "είδος",
+  "{items} items · {outfits} outfits": "{items} είδη · {outfits} σύνολα",
+  "just now": "μόλις τώρα",
+  "Language": "Γλώσσα",
+  "Light theme": "Ανοιχτόχρωμο θέμα",
+  "m ago": "λεπ. πριν",
+  "Mac:": "Mac:",
+  "No name yet": "Δεν έχει οριστεί όνομα",
+  "None": "Κανένα",
+  "Pin (the dice skips pinned rows)": "Καρφίτσωμα (τα ζάρια παραλείπουν τις καρφιτσωμένες σειρές)",
+  "press": "πατήστε",
+  "Profile": "Προφίλ",
+  "Profile saved.": "Το προφίλ αποθηκεύτηκε.",
+  "Set": "Ορισμός",
+  "Style tags (comma separated)": "Ετικέτες στυλ (χωρισμένες με κόμμα)",
+  "Swipe a row, or press ← and → on it. The piece in the middle is the chosen one. Pin a row so the dice skips it. Color match works best when your items have colors.": "Σύρετε μια σειρά προς τα αριστερά ή δεξιά ή χρησιμοποιήστε τα πλήκτρα ← και →. Το κομμάτι που βρίσκεται στο κέντρο είναι το επιλεγμένο. Καρφιτσώστε μια σειρά ώστε τα ζάρια να την παραλείπουν. Το ταίριασμα χρωμάτων λειτουργεί καλύτερα όταν έχετε ορίσει τα χρώματα των ειδών σας.",
+  "Sync keeps your closet in a hidden app-data file inside your own Google Drive — nothing is sent to us. It merges this device with the Drive copy, most recent change winning, so you can move between different devices.": "Ο συγχρονισμός αποθηκεύει τη ντουλάπα σας σε ένα κρυφό αρχείο δεδομένων εφαρμογής στο προσωπικό σας Google Drive. Κανένα δεδομένο δεν αποστέλλεται σε εμάς. Τα δεδομένα αυτής της συσκευής συγχωνεύονται με το αντίγραφο στο Google Drive, με προτεραιότητα στις πιο πρόσφατες αλλαγές, ώστε να μπορείτε να χρησιμοποιείτε την εφαρμογή σε διαφορετικές συσκευές.",
+  "Synchronization failed.": "Ο συγχρονισμός απέτυχε.",
+  "Synchronizing…": "Γίνεται συγχρονισμός…",
+  "System theme": "Θέμα συστήματος",
+  "to copy it)": "για να το αντιγράψετε)",
+  "to paste": "για επικόλληση",
+  "Type {word} to confirm": "Πληκτρολογήστε {word} για επιβεβαίωση",
+  "Used for the greeting on your home page. Everything stays on this device.": "Χρησιμοποιείται στον χαιρετισμό της αρχικής σας σελίδας. Όλα τα δεδομένα παραμένουν σε αυτή τη συσκευή.",
+  "Version": "Έκδοση",
+  "vibe-coded with love": "vibe-coded με αγάπη",
+  "View Profile": "Προβολή προφίλ",
+  "We're glad you're here. Explore the platform and keep an eye on your notifications for helpful updates and announcements.": "Χαιρόμαστε που είστε εδώ! Εξερευνήστε την εφαρμογή και παρακολουθήστε τις ειδοποιήσεις σας για χρήσιμες ενημερώσεις και ανακοινώσεις.",
+  "Windows:": "Windows:",
+  "Atelier re-saves this file whenever your closet changes.": "Το Atelier ενημερώνει αυτόματα αυτό το αρχείο κάθε φορά που αλλάζει κάτι στη ντουλάπα σας.",
+  "Backup saved: {items} items, {outfits} outfits.": "Το αντίγραφο ασφαλείας αποθηκεύτηκε: {items} είδη, {outfits} σύνολα.",
+  "Beige": "Μπεζ",
+  "Black": "Μαύρο",
+  "Blue": "Μπλε",
+  "Brown": "Καφέ",
+  "Browsers can clear site data when storage runs low. Ask yours to keep it, and make a backup file for extra safety.": "Τα προγράμματα περιήγησης ενδέχεται να διαγράψουν δεδομένα ιστοτόπων όταν ο αποθηκευτικός χώρος είναι περιορισμένος. Ρυθμίστε το πρόγραμμα περιήγησής σας ώστε να διατηρεί τα δεδομένα και δημιουργήστε ένα αντίγραφο ασφαλείας για επιπλέον προστασία.",
+  "Clear": "Αίθριος καιρός",
+  "Could not reach the city lookup.": "Δεν ήταν δυνατή η σύνδεση με την υπηρεσία αναζήτησης πόλεων.",
+  "Cream": "Κρεμ",
+  "Dark": "Σκούρο",
+  "Disconnect": "Αποσύνδεση",
+  "Drizzle": "Ψιχάλισμα",
+  "Fog": "Ομίχλη",
+  "Freezing drizzle": "Παγωμένο Ψιχάλισμα",
+  "Freezing rain": "Παγωμένη Βροχή",
+  "Good afternoon": "Καλό μεσημέρι",
+  "Good evening": "Καλησπέρα",
+  "Good morning": "Καλημέρα",
+  "Green": "Πράσινο",
+  "Grey": "Γκρι",
+  "Icy fog": "Παγωμένη Ομίχλη",
+  "Imported {items} items and {outfits} outfits.": "Εισήχθησαν {items} είδη και {outfits} outfit.",
+  "Last saved {date}.": "Τελευταία αποθήκευση: {date}.",
+  "Last synced {date}.": "Τελευταίος συγχρονισμός: {date}.",
+  "Light": "Ανοιχτόχρωμο",
+  "Link a file…": "Σύνδεση αρχείου…",
+  "Loading…": "Φόρτωση…",
+  "Mostly clear": "Κυρίως αίθριος καιρός",
+  "Navy": "Σκούρο μπλε",
+  "Not synced on this device yet. Press Sync to upload and merge.": "Δεν έχει πραγματοποιηθεί ακόμα συγχρονισμός σε αυτή τη συσκευή. Πατήστε «Συγχρονισμός» για να μεταφορτώσετε και να συγχωνεύσετε τα δεδομένα σας.",
+  "Olive": "Λαδί",
+  "Orange": "Πορτοκαλί",
+  "Overcast": "Συννεφιά",
+  "Partly cloudy": "Μερική Συννεφιά",
+  "Pick a city for the forecast.": "Επιλέξτε μια πόλη για την πρόγνωση του καιρού.",
+  "Pick a file inside a cloud-synced folder (iCloud Drive, OneDrive, Google Drive). Atelier re-saves it whenever your closet changes, so another device can pick it up.": "Επιλέξτε ένα αρχείο μέσα σε έναν φάκελο που συγχρονίζεται με το cloud (iCloud Drive, OneDrive ή Google Drive). Το Atelier ενημερώνει αυτόματα το αρχείο κάθε φορά που αλλάζει η ντουλάπα σας, ώστε να είναι διαθέσιμο και σε άλλες συσκευές.",
+  "Pink": "Ροζ",
+  "Preparing…": "Προετοιμασία...",
+  "Purple": "Μωβ",
+  "Rain": "Βροχή",
+  "Rain showers": "Μπόρες",
+  "Reconnect": "Επανασύνδεση",
+  "Red": "Κόκκινο",
+  "Replaced with {items} items and {outfits} outfits.": "Τα δεδομένα αντικαταστάθηκαν με {items} είδη και {outfits} outfit.",
+  "Save now": "Αποθήκευση τώρα",
+  "Saved to {file}": "Αποθηκέυτηκε στο {file}",
+  "Showers": "Μπόρες",
+  "Snow": "Χιόνι",
+  "Snow grains": "Χιονόκοκκοι",
+  "Snow showers": "Χιονομπόρες",
+  "Sync now": "Συγχρονισμός τώρα",
+  "Synced: {items} items, {outfits} outfits.": "Συγχρονίστηκαν {items} είδη και {outfits} outfit.",
+  "Syncing…": "Γίνεται συγχρονισμός…",
+  "System": "Σύστημα",
+  "Tap to retry": "Πατήστε για να δοκιμάσετε ξανά",
+  "This browser cannot guarantee storage. Make backups to be safe.": "Αυτό το πρόγραμμα περιήγησης δεν μπορεί να εγγυηθεί τη διατήρηση των δεδομένων. Δημιουργείτε αντίγραφα ασφαλείας για μεγαλύτερη ασφάλεια.",
+  "Thunderstorm": "Καταιγίδα",
+  "Today": "Σήμερα",
+  "Unlink": "Κατάργηση σύνδεσης",
+  "Up late": "Ξενυχτάτε;",
+  "Using {size}.": "Χρησιμοποιούνται {size}.",
+  "Version {version}": "Έκδοση {version}",
+  "Weather in {city}. Tap for the forecast.": "Καιρός στην πόλη {city}. Πατήστε για να δείτε την πρόγνωση.",
+  "Weather is unavailable right now.": "Ο καιρός δεν είναι διαθέσιμος αυτή τη στιγμή.",
+  "Weather set for {city}.": "Ορίστηκε η πόλη {city} για την πρόγνωση του καιρού.",
+  "White": "Άσπρο",
+  "Yellow": "Κίτρινο",
+  "Your browser needs permission again before it can save. Click Reconnect.": "Το πρόγραμμα περιήγησής σας χρειάζεται ξανά άδεια για την αποθήκευση. Πατήστε «Επανασύνδεση».",
+  "Your browser will not clear your closet automatically.": "Το πρόγραμμα περιήγησής σας δεν θα διαγράφει αυτόματα τα δεδομένα της ντουλάπας σας.",
+  "backup file": "αρχείο αντιγράφου ασφαλείας",
+  "merged with Drive": "συγχωνεύτηκε με το Google Drive",
+  "{items} items ({photos} with photos) and {outfits} outfits. Photos you add or upload stay here between launches until you delete them.": "{items} είδη ({photos} με φωτογραφίες) και {outfits} outfit. Οι φωτογραφίες που προσθέτετε ή μεταφορτώνετε παραμένουν αποθηκευμένες εδώ, ακόμα και μετά το κλείσιμο της εφαρμογής, μέχρι να τις διαγράψετε.",
+  "Set city": "Ορισμός πόλης",
+  "Weather…": "Καιρός…",
 };
 
 const SENT = '\u0000';      // wraps runtime values so user data is never translated
@@ -432,8 +555,19 @@ export function t(text) {
   return lookup(text) ?? text;
 }
 
+// Translate a sentence before inserting runtime values, without translating user data.
+export function tf(text, values = {}) {
+  return t(text).replace(/\{(\w+)\}/g, (match, key) =>
+    Object.prototype.hasOwnProperty.call(values, key) ? String(values[key]) : match);
+}
+
 // Keeps the surrounding whitespace/indentation of an HTML text run.
 function subText(text) {
+  // Translate literal fragments beside interpolations; runtime values stay fenced off.
+  if (text.includes(SENT)) {
+    return text.split(/(\u0000\d+\u0000)/).map(part =>
+      part.startsWith(SENT) ? part : subText(part)).join('');
+  }
   const m = /^(\s*)([\s\S]*?)(\s*)$/.exec(text);
   const greek = lookup(m[2]);
   return greek == null ? text : m[1] + greek + m[3];

@@ -3,7 +3,7 @@
 // 30 minutes so the last reading still shows offline.
 import * as db from './database.js';
 import { esc, toast } from './components.js';
-import { t, tr } from './i18n.js';
+import { t, tr, tf, lang } from './i18n.js';
 
 const GEO = 'https://geocoding-api.open-meteo.com/v1/search';
 const FC = 'https://api.open-meteo.com/v1/forecast';
@@ -40,7 +40,7 @@ export const summary = () => last;
 const shortPlace = label => (label || '').split(',')[0].trim();
 
 export async function resolveCity(q) {
-  const r = await fetch(`${GEO}?name=${encodeURIComponent(q.trim())}&count=1&language=en&format=json`);
+  const r = await fetch(`${GEO}?name=${encodeURIComponent(q.trim())}&count=1&language=${lang()}&format=json`);
   if (!r.ok) throw new Error('Could not reach the city lookup.');
   const d = await r.json();
   const res = (d.results || [])[0];
@@ -71,7 +71,7 @@ export async function fetchForecast(c) {
   return data;
 }
 
-const dayName = t => { try { return new Date(t + 'T12:00').toLocaleDateString(undefined, { weekday: 'short' }); } catch { return ''; } };
+const dayName = date => { try { return new Date(date + 'T12:00').toLocaleDateString(lang(), { weekday: 'short' }); } catch { return ''; } };
 
 // Renders into `host` (the popover container beside the strip) and keeps `chip`
 // (the button in the strip) in sync. Tapping the chip toggles the popover.
@@ -89,7 +89,7 @@ export function mountWeather({ host, chip }) {
 
   function daysBlock(days) {
     return `<div class="wx-days">${days.map((d, i) => `<div class="wx-day${i === 0 ? ' today' : ''}">
-        <span class="wx-dn">${i === 0 ? 'Today' : dayName(d.date)}</span>
+        <span class="wx-dn">${i === 0 ? esc(t('Today')) : dayName(d.date)}</span>
         <span class="wx-di">${codeInfo(d.code)[1]}</span>
         <span class="wx-dt"><b>${d.max}°</b><i>${d.min}°</i></span>
       </div>`).join('')}</div>`;
@@ -99,15 +99,15 @@ export function mountWeather({ host, chip }) {
     const [cond, ico] = codeInfo(d.current.code);
     host.innerHTML = tr`<div class="wx-top">
         <span class="wx-ico">${ico}</span>
-        <div class="wx-now"><b>${d.current.temp}°</b><span>${cond}</span></div>
-        <div class="wx-place"><span class="wx-city">${esc(shortPlace(city().label))}</span><span class="wx-feels">Feels ${d.current.feels}°</span></div>
+        <div class="wx-now"><b>${d.current.temp}°</b><span>${esc(t(cond))}</span></div>
+        <div class="wx-place"><span class="wx-city">${esc(shortPlace(city().label))}</span><span class="wx-feels">${esc(tf('Feels {temperature}°', { temperature: d.current.feels }))}</span></div>
         <button type="button" class="wx-close" data-close aria-label="Close forecast">×</button>
       </div>${daysBlock(d.days)}`;
   }
 
   function loading() {
     const c = city();
-    host.innerHTML = `<div class="wx-top">
+    host.innerHTML = tr`<div class="wx-top">
         <span class="wx-ico">⛅</span>
         <div class="wx-now"><b>—</b><span>Loading…</span></div>
         <div class="wx-place"><span class="wx-city">${esc(shortPlace(c ? c.label : ''))}</span></div>
@@ -123,7 +123,7 @@ export function mountWeather({ host, chip }) {
         <div class="wx-place"><span class="wx-city">${esc(shortPlace(c.label))}</span></div>
         <button type="button" class="wx-close" data-close aria-label="Close forecast">×</button>
       </div>
-      <p class="wx-retry muted small">${esc(msg)} <button class="link" data-retry>Try again</button></p>`;
+      <p class="wx-retry muted small">${esc(t(msg))} <button class="link" data-retry>Try again</button></p>`;
   }
 
   async function load() {
@@ -161,7 +161,7 @@ export function mountWeather({ host, chip }) {
         const found = await resolveCity(inp.value);
         if (!found) { toast(t('No matching city — try another name.'), 'error'); return; }
         setCity(found);
-      } catch (e2) { toast(e2.message || t('Could not find that city.'), 'error'); }
+      } catch (e2) { toast(t(e2.message || 'Could not find that city.'), 'error'); }
       finally { go.disabled = false; }
     };
     setTimeout(() => inp.focus(), 30);

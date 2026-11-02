@@ -4,7 +4,7 @@ import { exportBackup, importBackup } from './backup.js';
 import * as auto from './autobackup.js';
 import * as gdrive from './gdrive.js';
 import * as weather from './weather.js';
-import { t, tr } from './i18n.js';
+import { t, tr, tf, translateHtml, lang } from './i18n.js';
 
 const prefs = db.settings;
 const VERSION = 'alpha 0.4.0';
@@ -35,7 +35,7 @@ function typedConfirm({ title, message, word = t('DELETE'), button = t('Delete e
     let done = false;
     const m = openModal({
       title, className: 'small',
-      body: tr`<p class="muted">${esc(message)}</p><label class="field"><span>Type ${word} to confirm</span><input id="tc" autocomplete="off" autofocus></label>
+      body: tr`<p class="muted">${esc(message)}</p><label class="field"><span>${esc(tf('Type {word} to confirm', { word }))}</span><input id="tc" autocomplete="off" autofocus></label>
         <div class="form-actions"><button class="btn ghost" data-no>Cancel</button><button class="btn danger" data-yes disabled>${esc(button)}</button></div>`,
       onClose: () => { if (!done) resolve(false); }
     });
@@ -49,8 +49,8 @@ function typedConfirm({ title, message, word = t('DELETE'), button = t('Delete e
 export function createSettings(root, { onRemoveDemo, onBack } = {}) {
   let page = 'main';
   const radios = (name, value, opts) => `<div class="radios" role="radiogroup" aria-label="${name}">${opts.map(([v, l]) =>
-    `<label class="radio"><input type="radio" name="${name}" value="${v}" ${v === value ? 'checked' : ''}><span>${l}</span></label>`).join('')}</div>`;
-  const row = (label, desc, control, cls = '') => `<div class="s-row ${cls}"><div><strong>${label}</strong>${desc ? `<p class="muted small">${desc}</p>` : ''}</div>${control ? `<div>${control}</div>` : ''}</div>`;
+    `<label class="radio"><input type="radio" name="${name}" value="${v}" ${v === value ? 'checked' : ''}><span>${esc(t(l))}</span></label>`).join('')}</div>`;
+  const row = (label, desc, control, cls = '') => `<div class="s-row ${cls}"><div><strong>${label}</strong>${desc ? `<p class="muted small">${translateHtml(desc)}</p>` : ''}</div>${control ? `<div>${translateHtml(control)}</div>` : ''}</div>`;
 
   async function renderMain() {
     let items = [], outfits = [], info = { supported: false, persisted: false, usage: null };
@@ -67,8 +67,8 @@ export function createSettings(root, { onRemoveDemo, onBack } = {}) {
     const autoRow = !autoSup
       ? row(t('Auto-backup to a file'), t('This browser can’t link a file. Use Export backup above, or open Atelier in Chrome or Edge on a computer.'), '')
       : (autoMeta && autoPerm !== 'none')
-        ? row(`Saved to ${esc(autoMeta.name || 'backup file')}`,
-            `${autoMeta.savedAt ? `Last saved ${new Date(autoMeta.savedAt).toLocaleString()}. ` : ''}${autoPerm === 'granted' ? 'Atelier re-saves this file whenever your closet changes.' : 'Your browser needs permission again before it can save. Click Reconnect.'}`,
+        ? row(esc(tf('Saved to {file}', { file: autoMeta.name || t('backup file') })),
+            `${autoMeta.savedAt ? tf('Last saved {date}.', { date: new Date(autoMeta.savedAt).toLocaleString(lang()) }) + ' ' : ''}${autoPerm === 'granted' ? t('Atelier re-saves this file whenever your closet changes.') : t('Your browser needs permission again before it can save. Click Reconnect.')}`,
             autoPerm === 'granted'
               ? '<button class="btn" data-act="autoSave">Save now</button> <button class="btn danger-ghost" data-act="autoUnlink">Unlink</button>'
               : '<button class="btn primary" data-act="autoReconnect">Reconnect</button> <button class="btn danger-ghost" data-act="autoUnlink">Unlink</button>')
@@ -80,7 +80,7 @@ export function createSettings(root, { onRemoveDemo, onBack } = {}) {
     const lastSync = gdrive.lastSync();
     const driveRow = gdriveOk
       ? row(t('Google Drive'),
-          lastSync ? `Last synced ${new Date(lastSync).toLocaleString()}.` : 'Not synced on this device yet. Press Sync to upload and merge.',
+          lastSync ? tf('Last synced {date}.', { date: new Date(lastSync).toLocaleString(lang()) }) : 'Not synced on this device yet. Press Sync to upload and merge.',
           '<button class="btn primary" data-act="gsync">Sync now</button> <button class="btn danger-ghost" data-act="gdisconnect">Disconnect</button>')
       : row(t('Connect Google Drive'), t('Paste your Google OAuth Client ID to turn on sync.'),
           tr`<div class="inline-field"><input id="gclient" placeholder="Client ID…" value="${esc(gdrive.clientId())}" aria-label="Google client ID" autocomplete="off"><button class="btn" data-act="gsave">Save</button></div>`);
@@ -104,7 +104,7 @@ export function createSettings(root, { onRemoveDemo, onBack } = {}) {
       </section>
 
       <section class="s-card">${sTitle(sIco(icons.database), t('Photos and data'))}
-        ${row(t('Saved on this device'), `${items.length} item${items.length === 1 ? '' : 's'} (${photos} with photos) and ${outfits.length} outfit${outfits.length === 1 ? '' : 's'}. Photos you add or upload stay here between launches until you delete them.${info.usage != null ? ` Using ${fmtBytes(info.usage)}.` : ''}`, '')}
+        ${row(t('Saved on this device'), esc(tf('{items} items ({photos} with photos) and {outfits} outfits. Photos you add or upload stay here between launches until you delete them.', { items: items.length, photos, outfits: outfits.length }) + (info.usage != null ? ' ' + tf('Using {size}.', { size: fmtBytes(info.usage) }) : '')), '')}
         ${row(t('Keep it safe'), info.persisted ? '<span class="ok-text">Protected.</span> Your browser will not clear your closet automatically.' : info.supported ? 'Browsers can clear site data when storage runs low. Ask yours to keep it, and make a backup file for extra safety.' : 'This browser cannot guarantee storage. Make backups to be safe.', info.supported && !info.persisted ? '<button class="btn" data-act="persist">Protect my data</button>' : '')}
         <div class="s-actions"><button class="btn" data-act="export">Export backup</button><button class="btn" data-act="import">Import backup</button><input type="file" id="importFile" accept="application/json,.json" hidden>
           ${hasDemo ? '<button class="btn" data-act="demo">Remove sample content</button>' : ''}</div>
@@ -133,7 +133,7 @@ export function createSettings(root, { onRemoveDemo, onBack } = {}) {
       </section>
 
       <section class="s-card">${sTitle(sIco(icons.info), t('About'))}
-        ${row(t('Atelier'), `Version ${VERSION}`, '<button class="btn" data-act="about">About</button>')}
+        ${row(t('Atelier'), esc(tf('Version {version}', { version: VERSION })), '<button class="btn" data-act="about">About</button>')}
       </section></div>`;
   }
 
@@ -142,7 +142,7 @@ export function createSettings(root, { onRemoveDemo, onBack } = {}) {
       <div><button class="link-back" data-act="back">‹ Settings</button></div>
       <section class="s-card about">
         <div class="about-logo" aria-hidden="true">a</div>
-        <h3>Atelier</h3><p class="muted">Version ${VERSION}</p>
+        <h3>Atelier</h3><p class="muted">${esc(tf('Version {version}', { version: VERSION }))}</p>
         <p>A private digital closet and outfit builder. Add your clothes once, then mix and match them into outfits.</p>
         <p class="muted small">No account. No tracking. Your photos and outfits never leave this device.</p>
         <p class="creator"><span class="muted">Created by</span> <strong>@jimboxsat</strong></p>
@@ -181,8 +181,8 @@ export function createSettings(root, { onRemoveDemo, onBack } = {}) {
         const ok = await db.requestPersistence();
         toast(ok ? t('Your data is now protected.') : t('Your browser did not grant protection. Use backups to be safe.'), ok ? 'success' : 'info'); await render();
       } else if (act === 'export') {
-        b.disabled = true; const label = b.textContent; b.textContent = 'Preparing…';
-        try { const r = await exportBackup(); toast(`Backup saved: ${r.items} items, ${r.outfits} outfits.`, 'success'); }
+        b.disabled = true; const label = b.textContent; b.textContent = t('Preparing…');
+        try { const r = await exportBackup(); toast(tf('Backup saved: {items} items, {outfits} outfits.', { items: r.items, outfits: r.outfits }), 'success'); }
         finally { b.disabled = false; b.textContent = label; }
       } else if (act === 'import') { openImportDialog(); }
       else if (act === 'autoLink') {
@@ -205,9 +205,9 @@ export function createSettings(root, { onRemoveDemo, onBack } = {}) {
         toast(gdrive.configured() ? t('Google Drive connected.') : t('Client ID cleared.'), gdrive.configured() ? 'success' : 'info');
         await render();
       } else if (act === 'gsync') {
-        b.disabled = true; const label = b.textContent; b.textContent = 'Syncing…';
-        try { const r = await gdrive.sync(); toast(`Synced: ${r.items} items, ${r.outfits} outfits.`, 'success'); }
-        catch (err) { toast(err.message || t('Sync failed'), 'error'); }
+        b.disabled = true; const label = b.textContent; b.textContent = t('Syncing…');
+        try { const r = await gdrive.sync(); toast(tf('Synced: {items} items, {outfits} outfits.', { items: r.items, outfits: r.outfits }), 'success'); }
+        catch (err) { toast(t(err.message) || t('Sync failed'), 'error'); }
         finally { b.disabled = false; b.textContent = label; }
         await render();
       } else if (act === 'gdisconnect') {
@@ -225,8 +225,8 @@ export function createSettings(root, { onRemoveDemo, onBack } = {}) {
         try {
           const c = await weather.resolveCity(q);
           if (!c) { toast(t('No matching city — try another name.'), 'error'); return; }
-          weather.setCity(c); toast(`Weather set for ${c.label}.`, 'success'); await render();
-        } catch (err) { toast(err.message || t('Could not find that city.'), 'error'); }
+          weather.setCity(c); toast(tf('Weather set for {city}.', { city: c.label }), 'success'); await render();
+        } catch (err) { toast(t(err.message) || t('Could not find that city.'), 'error'); }
       }
       else if (act === 'demo') { await onRemoveDemo && onRemoveDemo(); await render(); }
       else if (act === 'delOutfits') {
@@ -244,7 +244,7 @@ export function createSettings(root, { onRemoveDemo, onBack } = {}) {
       } else if (act === 'about') { page = 'about'; await render(); }
       else if (act === 'back') { page = 'main'; await render(); window.scrollTo({ top: 0 }); }
       else if (act === 'leave') { if (onBack) onBack(); }
-    } catch (err) { console.error(err); toast(err.message || t('Something went wrong'), 'error'); }
+    } catch (err) { console.error(err); toast(t(err.message) || t('Something went wrong'), 'error'); }
   });
 
   root.addEventListener('change', async e => {
@@ -263,9 +263,9 @@ export function createSettings(root, { onRemoveDemo, onBack } = {}) {
       const f = el.files[0]; el.value = ''; if (!f) return;
       try {
         const r = await importBackup(f, { mode: importMode });
-        toast(r.mode === 'replace' ? `Replaced with ${r.items} items and ${r.outfits} outfits.` : `Imported ${r.items} items and ${r.outfits} outfits.`, 'success');
+        toast(r.mode === 'replace' ? tf('Replaced with {items} items and {outfits} outfits.', { items: r.items, outfits: r.outfits }) : tf('Imported {items} items and {outfits} outfits.', { items: r.items, outfits: r.outfits }), 'success');
         await render();
-      } catch (err) { toast(err.message || t('Import failed'), 'error'); }
+      } catch (err) { toast(t(err.message) || t('Import failed'), 'error'); }
     }
   });
 
