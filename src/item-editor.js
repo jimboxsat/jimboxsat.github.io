@@ -3,6 +3,7 @@ import { CATEGORIES, MAIN_CATEGORIES, SEASONS, OCCASIONS, COLOR_NAMES, COLORS } 
 import { esc, $, $$, openModal, toast, confirmDialog, icons } from './components.js';
 import { openImageCropper } from './screenshot.js';
 import { validateImageFile, blobToImage, loadImage, renderEdited, normalizeBlob, imgSrc, canvasToBlob } from './image-utils.js';
+import { t, tr } from './i18n.js';
 
 // ---- custom dropdown (replaces native <select> in the details form) ----
 // Keeps a hidden input with the same name so existing form.*.value reads keep working.
@@ -11,12 +12,12 @@ function cselectHtml({ name = '', value = '', options, dots = false, id = '', ar
   const dotFor = v => (dots && v) ? `<i class="dot" style="background:${COLORS[v] || '#ccc'}"></i>` : '';
   const optHtml = o => {
     const on = o === cur;
-    return `<button type="button" role="option" class="cselect-opt${on ? ' selected' : ''}" data-value="${esc(o.value)}" aria-selected="${on}">${dotFor(o.value)}<span>${esc(o.label)}</span></button>`;
+    return `<button type="button" role="option" class="cselect-opt${on ? ' selected' : ''}" data-value="${esc(o.value)}" aria-selected="${on}">${dotFor(o.value)}<span>${esc(t(o.label))}</span></button>`;
   };
   const ariaAttr = aria ? ` aria-label="${esc(aria)}"` : '';
   return `<div class="cselect"${id ? ` id="${id}"` : ''} data-cselect>
     <input type="hidden" name="${esc(name)}" value="${esc(cur.value)}">
-    <button type="button" class="cselect-btn" aria-haspopup="listbox" aria-expanded="false"${ariaAttr}><span class="cselect-val">${dotFor(cur.value)}<span>${esc(cur.label)}</span></span><svg class="cselect-caret" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+    <button type="button" class="cselect-btn" aria-haspopup="listbox" aria-expanded="false"${ariaAttr}><span class="cselect-val">${dotFor(cur.value)}<span>${esc(t(cur.label))}</span></span><svg class="cselect-caret" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
     <div class="cselect-menu" role="listbox" hidden>${options.map(optHtml).join('')}</div>
   </div>`;
 }
@@ -81,10 +82,10 @@ export function openItemEditor(existing = null, { onSaved, initialBlob = null } 
   const cat0 = existing ? existing.category : 'Tops';
 
   const m = openModal({
-    title: editing ? 'Edit item' : 'Add item', className: 'wizard',
-    beforeClose: async () => state.dirty ? confirmDialog({ title: 'Discard changes?', message: 'Your unsaved changes will be lost.', confirmText: 'Discard', danger: true }) : true,
+    title: editing ? t('Edit item') : t('Add item'), className: 'wizard',
+    beforeClose: async () => state.dirty ? confirmDialog({ title: t('Discard changes?'), message: t('Your unsaved changes will be lost.'), confirmText: t('Discard'), danger: true }) : true,
     onClose: () => { if (state.previewUrl) URL.revokeObjectURL(state.previewUrl); },
-    body: `
+    body: tr`
     <div class="wizard-steps">
       <button type="button" class="wizard-step" data-step="1"><b>1</b> Photo</button>
       <span class="wizard-sep" aria-hidden="true"></span>
@@ -127,14 +128,14 @@ export function openItemEditor(existing = null, { onSaved, initialBlob = null } 
         <label class="field"><span>Name *</span><input name="name" maxlength="80" required autocomplete="off" value="${esc(existing?.name || '')}" autofocus><em class="err" data-err="name"></em></label>
         <div class="row2">
           <label class="field"><span>Brand</span><input name="brand" list="brandList" maxlength="60" value="${esc(existing?.brand || '')}"><datalist id="brandList"></datalist></label>
-          <div class="field"><span>Main color</span>${cselectHtml({ name: 'mainColor', value: existing?.colors?.[0] || '', options: [{ value: '', label: '—' }, ...COLOR_NAMES.map(c => ({ value: c, label: c }))], dots: true, aria: 'Main color' })}</div>
+          <div class="field"><span>Main color</span>${cselectHtml({ name: 'mainColor', value: existing?.colors?.[0] || '', options: [{ value: '', label: '—' }, ...COLOR_NAMES.map(c => ({ value: c, label: c }))], dots: true, aria: t('Main color') })}</div>
         </div>
         <div class="row2">
-          <div class="field"><span>Category *</span>${cselectHtml({ name: 'category', value: cat0, options: [...MAIN_CATEGORIES, ...(known || !existing ? [] : [existing.category]), '＋ Custom…'].map(c => ({ value: c, label: c })), aria: 'Category' })}</div>
+          <div class="field"><span>Category *</span>${cselectHtml({ name: 'category', value: cat0, options: [...MAIN_CATEGORIES, ...(known || !existing ? [] : [existing.category]), '＋ Custom…'].map(c => ({ value: c, label: c })), aria: t('Category') })}</div>
           <label class="field"><span>Subcategory</span><input name="subcategory" list="subList" maxlength="40" value="${esc(existing?.subcategory || '')}"><datalist id="subList"></datalist></label>
         </div>
         <label class="field" id="customCatWrap" hidden><span>Custom category name</span><input name="customCategory" maxlength="30"><em class="err" data-err="customCategory"></em></label>
-        <fieldset><legend>Additional colors</legend>${cselectHtml({ id: 'addColorSel', value: '', options: [{ value: '', label: 'Choose a color…' }, ...COLOR_NAMES.map(c => ({ value: c, label: c }))], dots: true, aria: 'Add an additional color' })}<div class="chips wrap color-pills" id="colorChips"></div></fieldset>
+        <fieldset><legend>Additional colors</legend>${cselectHtml({ id: 'addColorSel', value: '', options: [{ value: '', label: t('Choose a color…') }, ...COLOR_NAMES.map(c => ({ value: c, label: c }))], dots: true, aria: t('Add an additional color') })}<div class="chips wrap color-pills" id="colorChips"></div></fieldset>
         <fieldset><legend>Season</legend><div class="chips wrap" id="seasonChips"></div></fieldset>
         <fieldset><legend>Occasion</legend><div class="chips wrap" id="occChips"></div></fieldset>
         <div class="field"><span>Style tags</span>
@@ -162,8 +163,8 @@ export function openItemEditor(existing = null, { onSaved, initialBlob = null } 
   function renderStepPhoto() {
     if (!stepPhoto) return;
     const src = state.previewUrl || state.imageUrl;
-    stepPhoto.innerHTML = `<span class="step-photo-thumb">${src ? `<img src="${src}" alt="">` : '<span class="muted small">None</span>'}</span>
-      <span class="step-photo-meta"><strong>${src ? 'Photo ready' : 'No photo yet'}</strong><span class="muted small">${src ? 'Tap to change it, or continue below.' : 'You can add one now or later.'}</span><button type="button" class="link" data-step-go="1">Change photo</button></span>`;
+    stepPhoto.innerHTML = tr`<span class="step-photo-thumb">${src ? `<img src="${src}" alt="">` : '<span class="muted small">None</span>'}</span>
+      <span class="step-photo-meta"><strong>${src ? t('Photo ready') : t('No photo yet')}</strong><span class="muted small">${src ? t('Tap to change it, or continue below.') : t('You can add one now or later.')}</span><button type="button" class="link" data-step-go="1">Change photo</button></span>`;
   }
   function setStep(n) {
     step = n;
@@ -174,7 +175,7 @@ export function openItemEditor(existing = null, { onSaved, initialBlob = null } 
       on ? b.setAttribute('aria-current', 'step') : b.removeAttribute('aria-current');
     });
     const title = m.el.closest('.modal')?.querySelector('.modal-head h2');
-    if (title) title.textContent = n === 1 ? (editing ? 'Item photo' : 'Add a photo') : (editing ? 'Edit item' : 'Add details');
+    if (title) title.textContent = n === 1 ? (editing ? t('Item photo') : t('Add a photo')) : (editing ? t('Edit item') : 'Add details');
     const dlg = m.el.closest('.modal'); if (dlg) dlg.scrollTop = 0;
     if (n === 2) {
       renderStepPhoto();
@@ -190,7 +191,7 @@ export function openItemEditor(existing = null, { onSaved, initialBlob = null } 
 
   // ---- chips
   const chipSet = (el, opts, arr, { max = 99 } = {}) => {
-    const draw = () => { el.innerHTML = opts.map(o => `<button type="button" class="chip small ${arr.includes(o) ? 'active' : ''}" aria-pressed="${arr.includes(o)}" data-v="${esc(o)}">${esc(o)}</button>`).join(''); };
+    const draw = () => { el.innerHTML = opts.map(o => `<button type="button" class="chip small ${arr.includes(o) ? 'active' : ''}" aria-pressed="${arr.includes(o)}" data-v="${esc(o)}">${esc(t(o))}</button>`).join(''); };
     draw();
     el.onclick = e => { const b = e.target.closest('[data-v]'); if (!b) return; const v = b.dataset.v; const i = arr.indexOf(v); i >= 0 ? arr.splice(i, 1) : arr.length < max && arr.push(v); state.dirty = true; draw(); };
   };
@@ -285,7 +286,7 @@ export function openItemEditor(existing = null, { onSaved, initialBlob = null } 
     state.source = s;
     $$('.seg-btn', m.el).forEach(b => b.classList.toggle('active', b.dataset.src === s || (s === 'keep' && b.dataset.src === 'upload')));
     if (s === 'upload' || s === 'keep') {
-      panel.innerHTML = `<label class="dropzone" id="upDrop" tabindex="0"><strong>${state.blob || state.imageUrl ? 'Replace image' : 'Upload a photo'}</strong><span>Click to choose a file, drop an image here, or press <kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>V</kbd> to paste</span><input type="file" accept="image/jpeg,image/png,image/webp" hidden id="fileIn"></label>`;
+      panel.innerHTML = tr`<label class="dropzone" id="upDrop" tabindex="0"><strong>${state.blob || state.imageUrl ? t('Replace image') : t('Upload a photo')}</strong><span>Click to choose a file, drop an image here, or press <kbd>Ctrl</kbd>/<kbd>Cmd</kbd>+<kbd>V</kbd> to paste</span><input type="file" accept="image/jpeg,image/png,image/webp" hidden id="fileIn"></label>`;
       const drop = $('#upDrop', m.el), file = $('#fileIn', m.el);
       const start = f => { if (f) cropPicked(f); file.value = ''; };
       file.onchange = e => start(e.target.files[0]);
@@ -294,10 +295,10 @@ export function openItemEditor(existing = null, { onSaved, initialBlob = null } 
       ['dragleave', 'drop'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.remove('over'); }));
       drop.addEventListener('drop', e => { const f = e.dataTransfer.files[0]; if (f) start(f); });
     } else if (s === 'camera') {
-      panel.innerHTML = `<label class="btn ghost file-btn">Take a photo<input type="file" accept="image/*" capture="environment" hidden id="camIn"></label><span class="muted small"> Opens your camera on supported devices</span>`;
+      panel.innerHTML = tr`<label class="btn ghost file-btn">Take a photo<input type="file" accept="image/*" capture="environment" hidden id="camIn"></label><span class="muted small"> Opens your camera on supported devices</span>`;
       $('#camIn', m.el).onchange = e => { const f = e.target.files[0]; if (f) setBlob(f); e.target.value = ''; };
     } else if (s === 'url') {
-      panel.innerHTML = `<div class="url-row"><input type="url" id="urlIn" placeholder="https://…/garment.png" aria-label="Image URL"><button type="button" class="btn ghost" id="urlGo">Load</button></div>`;
+      panel.innerHTML = tr`<div class="url-row"><input type="url" id="urlIn" placeholder="https://…/garment.png" aria-label="Image URL"><button type="button" class="btn ghost" id="urlGo">Load</button></div>`;
       $('#urlGo', m.el).onclick = async () => {
         const url = $('#urlIn', m.el).value.trim();
         if (!/^https?:\/\//i.test(url)) { showErr('Please enter a valid http(s) image URL.'); return; }
@@ -381,7 +382,7 @@ export function openItemEditor(existing = null, { onSaved, initialBlob = null } 
       };
       const saved = editing ? await db.updateItem(existing.id, data) : await db.addItem(data);
       state.dirty = false; m.close(true);
-      toast(editing ? 'Changes saved' : 'Item added to your closet', 'success');
+      toast(editing ? t('Changes saved') : t('Item added to your closet'), 'success');
       onSaved && onSaved(saved);
     } catch (err) {
       console.error(err);
@@ -397,13 +398,13 @@ export function openItemEditor(existing = null, { onSaved, initialBlob = null } 
 
 export async function openItemDetails(itemId, { onAddToOutfit, onChanged } = {}) {
   let item = await db.getItem(itemId);
-  if (!item) { toast('That item no longer exists', 'error'); return; }
-  const m = openModal({ title: 'Item details', className: 'wide', body: '' });
+  if (!item) { toast(t('That item no longer exists'), 'error'); return; }
+  const m = openModal({ title: t('Item details'), className: 'wide', body: '' });
   const draw = () => {
     const cs = (item.colors || []);
     const chips = (arr, cls = '') => arr?.length ? arr.map(x => `<span class="pill ${cls}">${esc(x)}</span>`).join('') : '<span class="muted">—</span>';
-    m.el.innerHTML = `<div class="details">
-      <div class="details-img"><img src="${imgSrc(item)}" alt="${esc(item.name)}"><button class="detail-fav ${item.favorite ? 'on' : ''}" data-act="fav" aria-pressed="${!!item.favorite}" aria-label="${item.favorite ? 'Unfavorite' : 'Favorite'} ${esc(item.name)}">${icons.star}</button></div>
+    m.el.innerHTML = tr`<div class="details">
+      <div class="details-img"><img src="${imgSrc(item)}" alt="${esc(item.name)}"><button class="detail-fav ${item.favorite ? 'on' : ''}" data-act="fav" aria-pressed="${!!item.favorite}" aria-label="${item.favorite ? 'Unfavorite' : t('Favorite')} ${esc(item.name)}">${icons.star}</button></div>
       <div class="details-info">
         <h3>${esc(item.name)} ${item.demo ? '<span class="badge demo inline">Sample</span>' : ''}${item.archived ? '<span class="badge arch inline">Archived</span>' : ''}</h3>
         <p class="muted">${esc(item.brand || 'No brand')}</p>
@@ -413,7 +414,7 @@ export async function openItemDetails(itemId, { onAddToOutfit, onChanged } = {})
           <dt>Season</dt><dd>${chips(item.season)}</dd>
           <dt>Occasion</dt><dd>${chips(item.occasions)}</dd>
           <dt>Tags</dt><dd>${chips(item.tags)}</dd>
-          ${item.notes ? `<dt>Notes</dt><dd>${esc(item.notes)}</dd>` : ''}
+          ${item.notes ? tr`<dt>Notes</dt><dd>${esc(item.notes)}</dd>` : ''}
           ${item.purchasePrice != null ? `<dt>Price</dt><dd>${esc(item.purchasePrice.toFixed(2))}</dd>` : ''}
           ${item.purchaseDate ? `<dt>Purchased</dt><dd>${esc(item.purchaseDate)}</dd>` : ''}
         </dl>
@@ -431,7 +432,7 @@ export async function openItemDetails(itemId, { onAddToOutfit, onChanged } = {})
     try {
       if (a === 'close') return m.close();
       if (a === 'fav') { item = await db.updateItem(item.id, { favorite: !item.favorite }); draw(); onChanged && onChanged(); }
-      if (a === 'archive') { item = await db.archiveItem(item.id, !item.archived); toast(item.archived ? 'Item archived' : 'Item restored'); draw(); onChanged && onChanged(); }
+      if (a === 'archive') { item = await db.archiveItem(item.id, !item.archived); toast(item.archived ? t('Item archived') : t('Item restored')); draw(); onChanged && onChanged(); }
       if (a === 'edit') { m.close(true); openItemEditor(item, { onSaved: () => onChanged && onChanged() }); }
       if (a === 'outfit') { m.close(true); onAddToOutfit && onAddToOutfit(item.id); }
       if (a === 'delete') {
@@ -439,8 +440,8 @@ export async function openItemDetails(itemId, { onAddToOutfit, onChanged } = {})
         const msg = outfits.length
           ? `"${item.name}" is used in ${outfits.length} saved outfit${outfits.length > 1 ? 's' : ''} (${outfits.slice(0, 3).map(o => o.name).join(', ')}${outfits.length > 3 ? '…' : ''}). It will be removed from them. This cannot be undone.`
           : `Permanently delete "${item.name}"? This cannot be undone. You could archive it instead.`;
-        if (await confirmDialog({ title: 'Delete item?', message: msg, confirmText: 'Delete', danger: true })) {
-          await db.deleteItem(item.id); m.close(true); toast('Item deleted'); onChanged && onChanged();
+        if (await confirmDialog({ title: t('Delete item?'), message: msg, confirmText: t('Delete'), danger: true })) {
+          await db.deleteItem(item.id); m.close(true); toast(t('Item deleted')); onChanged && onChanged();
         }
       }
     } catch (e) { console.error(e); toast('Something went wrong: ' + e.message, 'error'); }

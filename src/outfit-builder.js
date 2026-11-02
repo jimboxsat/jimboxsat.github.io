@@ -4,6 +4,7 @@ import { esc, $, $$, itemCard, icons, debounce, toast, openModal, confirmDialog 
 import { newFilters, activeCount, applyFilters, renderCategoryTabs, openFilterPanel } from './filters.js';
 import { openItemDetails } from './item-editor.js';
 import { imgSrc, blobToImage, loadImage, canvasToBlob } from './image-utils.js';
+import { t, tr } from './i18n.js';
 
 const CW = 800, CH = 1000;            // logical canvas, 4:5
 const ASPECT_H_OVER_W = CH / CW;
@@ -37,7 +38,7 @@ export function createOutfitBuilder(root) {
 
   function blank() { return { id: null, name: '', occasion: '', tags: [], notes: '', placements: [], dirty: false, selected: null, replacing: null, pane: 'canvas', history: [], createdAt: null }; }
 
-  root.innerHTML = `
+  root.innerHTML = tr`
     <div class="page-head"><div><h1>Outfit Builder</h1><p class="muted">Pick pieces from your closet, arrange them, and save the look.</p></div>
       <div class="subtabs" role="tablist"><button class="subtab active" role="tab" data-tab="editor" aria-selected="true">Editor</button><button class="subtab" role="tab" data-tab="list" aria-selected="false">My Outfits <span class="count" id="ob-ocount">0</span></button></div></div>
     <div id="ob-editor">
@@ -129,10 +130,10 @@ export function createOutfitBuilder(root) {
 
   async function addItem(itemId, { allowDuplicate = false, silent = false } = {}) {
     const item = itemsById.get(itemId);
-    if (!item) { toast('That item is no longer in your closet', 'error'); return; }
-    if (item.archived) { toast('Archived items can’t be used in new outfits. Restore it first.', 'error'); return; }
+    if (!item) { toast(t('That item is no longer in your closet'), 'error'); return; }
+    if (item.archived) { toast(t('Archived items can’t be used in new outfits. Restore it first.'), 'error'); return; }
     const existing = S.placements.find(p => p.itemId === itemId);
-    if (existing && !allowDuplicate) { S.selected = existing.uid; renderStage(); if (!silent) toast('Already in this outfit'); return; }
+    if (existing && !allowDuplicate) { S.selected = existing.uid; renderStage(); if (!silent) toast(t('Already in this outfit')); return; }
     const aspect = await ensureAspect(item);
     pushHistory();
     const role = layoutRole(item);
@@ -158,8 +159,8 @@ export function createOutfitBuilder(root) {
   async function replaceWith(uid, itemId) {
     const p = getP(uid), item = itemsById.get(itemId);
     if (!p || !item) return;
-    if (item.archived) return toast('Archived items can’t be used. Restore it first.', 'error');
-    if (S.placements.some(q => q.itemId === itemId)) { toast('That item is already in the outfit', 'error'); return; }
+    if (item.archived) return toast(t('Archived items can’t be used. Restore it first.'), 'error');
+    if (S.placements.some(q => q.itemId === itemId)) { toast(t('That item is already in the outfit'), 'error'); return; }
     const aspect = await ensureAspect(item);
     pushHistory();
     const cx = p.x + p.w / 2, cy = p.y + p.h / 2;
@@ -173,13 +174,13 @@ export function createOutfitBuilder(root) {
   function renderStage() {
     const sorted = [...S.placements].sort((a, b) => a.layerOrder - b.layerOrder);
     stage.innerHTML = '';
-    if (!sorted.length) stage.innerHTML = `<div class="stage-empty"><p>Your canvas is empty</p><span class="muted">Choose pieces from the closet to start an outfit.</span><button class="btn ghost mobile-only" data-goto-select>Browse closet</button></div>`;
+    if (!sorted.length) stage.innerHTML = tr`<div class="stage-empty"><p>Your canvas is empty</p><span class="muted">Choose pieces from the closet to start an outfit.</span><button class="btn ghost mobile-only" data-goto-select>Browse closet</button></div>`;
     sorted.forEach(p => {
       const item = itemsById.get(p.itemId);
       const el = document.createElement('div');
       el.className = 'piece' + (S.selected === p.uid ? ' selected' : '') + (p.pinned ? ' pinned' : '') + (item ? '' : ' missing');
       el.dataset.uid = p.uid; el.tabIndex = 0; el.setAttribute('role', 'button');
-      el.setAttribute('aria-label', (item ? item.name : 'Missing item') + (p.pinned ? ', pinned' : '') + '. Arrow keys move, plus and minus resize, Delete removes.');
+      el.setAttribute('aria-label', (item ? item.name : t('Missing item')) + (p.pinned ? ', pinned' : '') + '. Arrow keys move, plus and minus resize, Delete removes.');
       el.style.cssText = `left:${p.x * 100}%;top:${p.y * 100}%;width:${p.w * 100}%;height:${p.h * 100}%;transform:rotate(${p.rotation}deg);z-index:${p.layerOrder + 1}`;
       el.innerHTML = item ? `<img src="${imgSrc(item)}" alt="" draggable="false">` : '<div class="missing-box">Item removed from closet</div>';
       if (S.selected === p.uid) el.insertAdjacentHTML('beforeend', '<span class="handle" data-handle aria-hidden="true"></span>' + (p.pinned ? '<span class="pin-mark">📌</span>' : ''));
@@ -196,22 +197,22 @@ export function createOutfitBuilder(root) {
     if (!p) { el.innerHTML = `<span class="muted small">${S.placements.length ? 'Tap a piece to move, resize or layer it.' : ''}</span>`; return; }
     const item = itemsById.get(p.itemId);
     const b = (a, label, text) => `<button class="btn tiny ghost" data-s="${a}" aria-label="${label}" title="${label}">${text}</button>`;
-    el.innerHTML = `<strong class="sel-name">${esc(item ? item.name : 'Missing item')}</strong>
-      <span class="grp">${b('left', 'Move left', '←')}${b('up', 'Move up', '↑')}${b('down', 'Move down', '↓')}${b('right', 'Move right', '→')}</span>
-      <span class="grp">${b('smaller', 'Smaller', '−')}${b('bigger', 'Bigger', '+')}${b('rotl', 'Rotate left', '⟲')}${b('rotr', 'Rotate right', '⟳')}</span>
+    el.innerHTML = `<strong class="sel-name">${esc(item ? item.name : t('Missing item'))}</strong>
+      <span class="grp">${b('left', t('Move left'), '←')}${b('up', t('Move up'), '↑')}${b('down', 'Move down', '↓')}${b('right', 'Move right', '→')}</span>
+      <span class="grp">${b('smaller', 'Smaller', '−')}${b('bigger', 'Bigger', '+')}${b('rotl', t('Rotate left'), '⟲')}${b('rotr', t('Rotate right'), '⟳')}</span>
       <span class="grp">${b('fwd', 'Bring forward', 'Forward')}${b('back', 'Send backward', 'Backward')}</span>
-      <span class="grp">${b('pin', p.pinned ? 'Unpin (shuffle may replace)' : 'Pin (shuffle keeps it)', p.pinned ? 'Unpin' : 'Pin')}${b('dup', 'Duplicate this piece', 'Duplicate')}${item ? b('replace', 'Replace with another item', 'Replace') : ''}${b('remove', 'Remove from outfit', 'Remove')}</span>`;
+      <span class="grp">${b('pin', p.pinned ? 'Unpin (shuffle may replace)' : 'Pin (shuffle keeps it)', p.pinned ? 'Unpin' : 'Pin')}${b('dup', 'Duplicate this piece', t('Duplicate'))}${item ? b('replace', 'Replace with another item', t('Replace')) : ''}${b('remove', 'Remove from outfit', t('Remove'))}</span>`;
   }
 
   function renderActions() {
     const el = $('#ob-actions', root);
-    el.innerHTML = `<button class="btn primary" id="a-save">${S.id ? 'Save changes' : 'Save outfit'}</button>
+    el.innerHTML = tr`<button class="btn primary" id="a-save">${S.id ? 'Save changes' : 'Save outfit'}</button>
       <button class="btn ghost" id="a-cancel">Cancel</button>
       <button class="btn ghost" id="a-export" ${S.placements.length ? '' : 'disabled'}>Export PNG</button>
       ${S.id ? '<button class="btn ghost" id="a-dup">Duplicate outfit</button><button class="btn danger-ghost" id="a-del">Delete outfit</button>' : ''}
       ${S.dirty ? '<span class="dirty muted small">Unsaved changes</span>' : ''}`;
     $('#a-save', root).onclick = save; $('#a-cancel', root).onclick = cancel; $('#a-export', root).onclick = () => exportDialog(currentOutfitLike());
-    if (S.id) { $('#a-dup', root).onclick = async () => { if (await saveIfDirty()) { const o = await db.duplicateOutfit(S.id); toast('Outfit duplicated'); await openOutfit(o.id, true); } }; $('#a-del', root).onclick = () => deleteOutfit(S.id); }
+    if (S.id) { $('#a-dup', root).onclick = async () => { if (await saveIfDirty()) { const o = await db.duplicateOutfit(S.id); toast(t('Outfit duplicated')); await openOutfit(o.id, true); } }; $('#a-del', root).onclick = () => deleteOutfit(S.id); }
     $('#ob-undo', root).disabled = !S.history.length;
   }
 
@@ -299,7 +300,7 @@ export function createOutfitBuilder(root) {
     const el = $('#ob-replace-banner', root); const p = getP(S.replacing);
     if (!p) { el.hidden = true; return; }
     const it = itemsById.get(p.itemId);
-    el.hidden = false; el.innerHTML = `Choose an item to replace <strong>${esc(it ? it.name : 'missing item')}</strong> <button class="link" data-cancel-replace>Cancel</button>`;
+    el.hidden = false; el.innerHTML = tr`Choose an item to replace <strong>${esc(it ? it.name : 'missing item')}</strong> <button class="link" data-cancel-replace>Cancel</button>`;
   }
   $('#ob-replace-banner', root).addEventListener('click', e => { if (e.target.closest('[data-cancel-replace]')) { S.replacing = null; renderReplaceBanner(); } });
   $('#ob-grid', root).addEventListener('click', async e => {
@@ -330,7 +331,7 @@ export function createOutfitBuilder(root) {
     const snap = S.history.pop(); if (!snap) return;
     S.placements = JSON.parse(snap); if (!getP(S.selected)) S.selected = null; S.dirty = true; renderStage(); updateMarks();
   };
-  $('#ob-reset', root).onclick = () => { if (!S.placements.length) return toast('Nothing to arrange yet'); autoLayoutAll(); };
+  $('#ob-reset', root).onclick = () => { if (!S.placements.length) return toast(t('Nothing to arrange yet')); autoLayoutAll(); };
   $('#ob-new', root).onclick = async () => { if (await confirmDiscard()) { S = blank(); syncFields(); renderStage(); updateMarks(); } };
   function syncFields() {
     $('#ob-name', root).value = S.name; $('#ob-occ', root).value = S.occasion || ''; $('#ob-tags', root).value = S.tags.join(', '); $('#ob-notes', root).value = S.notes || '';
@@ -340,7 +341,7 @@ export function createOutfitBuilder(root) {
   // ---------- shuffle ----------
   $('#ob-shuffle', root).onclick = async () => {
     const active = allItems.filter(i => !i.archived);
-    if (active.length < 2) return toast('Add at least two items to your closet to shuffle outfits.', 'error');
+    if (active.length < 2) return toast(t('Add at least two items to your closet to shuffle outfits.'), 'error');
     const f = { ...filters, category: 'All', subcategory: '', q: '', archived: false };
     const group = list => list.reduce((m, i) => { (m[layoutRole(i)] ||= []).push(i); return m; }, {});
     const filtered = group(applyFilters(allItems, f)), all = group(active);
@@ -356,8 +357,8 @@ export function createOutfitBuilder(root) {
     if (!have.has('bag') && Math.random() < .2) optional.push('bag');
     const slots = [...required, ...optional].filter(r => !have.has(r));
     const usable = slots.filter(r => candidates(r).length);
-    if (!pinned.length && !usable.some(r => r === 'top' || r === 'bottom')) return toast('Not enough tops or bottoms to build a combination yet.', 'error');
-    if (!usable.length) return toast('Nothing else in your closet to shuffle with the pinned items.', 'error');
+    if (!pinned.length && !usable.some(r => r === 'top' || r === 'bottom')) return toast(t('Not enough tops or bottoms to build a combination yet.'), 'error');
+    if (!usable.length) return toast(t('Nothing else in your closet to shuffle with the pinned items.'), 'error');
     const sig = ids => [...ids].sort().join('|');
     recent.length = 0; recent.push(sig(S.placements.map(p => p.itemId)));
     let pick = null;
@@ -377,7 +378,7 @@ export function createOutfitBuilder(root) {
     }
     S.placements = out; normalizeLayers(); S.selected = null; markDirty(); renderStage(); updateMarks();
     const missing = ['top', 'bottom'].filter(r => !have.has(r) && !usable.includes(r));
-    toast(relaxed ? 'Shuffled. Some filters were relaxed to find enough items.' : missing.length ? `Shuffled. You have no ${missing.join(' or ')} items yet.` : 'Shuffled. Pin pieces you like, then shuffle again.');
+    toast(relaxed ? t('Shuffled. Some filters were relaxed to find enough items.') : missing.length ? `Shuffled. You have no ${missing.join(' or ')} items yet.` : 'Shuffled. Pin pieces you like, then shuffle again.');
   };
 
   // ---------- save / open ----------
@@ -386,25 +387,25 @@ export function createOutfitBuilder(root) {
   const unstrip = q => ({ uid: uidCounter++, itemId: q.itemId, x: q.x, y: q.y, w: q.width, h: q.height, rotation: q.rotation || 0, layerOrder: q.layerOrder, pinned: false });
 
   async function save() {
-    if (!S.placements.length) { toast('Add at least one item before saving.', 'error'); return false; }
+    if (!S.placements.length) { toast(t('Add at least one item before saving.'), 'error'); return false; }
     const name = (S.name || '').trim() || 'Untitled outfit';
     try {
       let preview = null; try { preview = await renderPNG(currentOutfitLike(), { width: 480, transparent: false }); } catch { /* preview optional */ }
       const data = { name, items: S.placements.map(strip), occasion: S.occasion, tags: S.tags, notes: S.notes, previewImage: preview };
       const saved = S.id ? await db.updateOutfit(S.id, data) : await db.addOutfit(data);
       S.id = saved.id; S.name = name; S.dirty = false; syncFields(); renderActions();
-      toast('Outfit saved', 'success'); return true;
+      toast(t('Outfit saved'), 'success'); return true;
     } catch (e) { console.error(e); toast('Could not save outfit: ' + e.message, 'error'); return false; }
   }
   async function saveIfDirty() { return S.dirty ? save() : true; }
   async function confirmDiscard() {
     if (!S.dirty) return true;
-    return confirmDialog({ title: 'Discard unsaved changes?', message: 'This outfit has changes that haven’t been saved.', confirmText: 'Discard', danger: true });
+    return confirmDialog({ title: t('Discard unsaved changes?'), message: t('This outfit has changes that haven’t been saved.'), confirmText: t('Discard'), danger: true });
   }
   async function cancel() { if (await confirmDiscard()) { S = blank(); syncFields(); renderStage(); updateMarks(); setTab('list'); } }
   async function openOutfit(id, skipConfirm = false) {
     if (!skipConfirm && S.id !== id && !(await confirmDiscard())) return;
-    const o = await db.getOutfit(id); if (!o) return toast('That outfit no longer exists', 'error');
+    const o = await db.getOutfit(id); if (!o) return toast(t('That outfit no longer exists'), 'error');
     await loadData();
     for (const q of o.items) await ensureAspect(itemsById.get(q.itemId));
     S = blank(); Object.assign(S, { id: o.id, name: o.name, occasion: o.occasion || '', tags: o.tags || [], notes: o.notes || '', createdAt: o.createdAt });
@@ -415,8 +416,8 @@ export function createOutfitBuilder(root) {
   }
   async function deleteOutfit(id) {
     const o = outfits.find(x => x.id === id) || await db.getOutfit(id); if (!o) return;
-    if (!(await confirmDialog({ title: 'Delete outfit?', message: `Delete “${o.name}”? Your clothing items are not affected.`, confirmText: 'Delete', danger: true }))) return;
-    try { await db.deleteOutfit(id); toast('Outfit deleted'); if (S.id === id) { S = blank(); syncFields(); renderStage(); updateMarks(); } } catch (e) { toast('Could not delete: ' + e.message, 'error'); }
+    if (!(await confirmDialog({ title: t('Delete outfit?'), message: `Delete “${o.name}”? Your clothing items are not affected.`, confirmText: t('Delete'), danger: true }))) return;
+    try { await db.deleteOutfit(id); toast(t('Outfit deleted')); if (S.id === id) { S = blank(); syncFields(); renderStage(); updateMarks(); } } catch (e) { toast('Could not delete: ' + e.message, 'error'); }
   }
 
   // ---------- rendering to PNG ----------
@@ -438,15 +439,15 @@ export function createOutfitBuilder(root) {
     return canvasToBlob(c);
   }
   function exportDialog(outfit) {
-    if (!outfit.items.some(p => itemsById.has(p.itemId))) return toast('There is nothing to export yet.', 'error');
-    const m = openModal({ title: 'Export outfit as PNG', className: 'small', body: `<label class="check"><input type="checkbox" id="x-tr"> Transparent background</label><p class="muted small">Exports at 1600 × 2000 px without any editor controls.</p><div class="form-actions"><button class="btn ghost" data-no>Cancel</button><button class="btn primary" id="x-go" autofocus>Download PNG</button></div>` });
+    if (!outfit.items.some(p => itemsById.has(p.itemId))) return toast(t('There is nothing to export yet.'), 'error');
+    const m = openModal({ title: t('Export outfit as PNG'), className: 'small', body: tr`<label class="check"><input type="checkbox" id="x-tr"> Transparent background</label><p class="muted small">Exports at 1600 × 2000 px without any editor controls.</p><div class="form-actions"><button class="btn ghost" data-no>Cancel</button><button class="btn primary" id="x-go" autofocus>Download PNG</button></div>` });
     $('[data-no]', m.el).onclick = () => m.close();
     $('#x-go', m.el).onclick = async () => {
       try {
         const blob = await renderPNG(outfit, { width: 1600, transparent: $('#x-tr', m.el).checked });
         const url = URL.createObjectURL(blob); const a = document.createElement('a');
         a.href = url; a.download = (outfit.name || 'outfit').replace(/[^\w\-]+/g, '-').toLowerCase() + '.png'; document.body.append(a); a.click(); a.remove();
-        setTimeout(() => URL.revokeObjectURL(url), 2000); m.close(true); toast('PNG exported', 'success');
+        setTimeout(() => URL.revokeObjectURL(url), 2000); m.close(true); toast(t('PNG exported'), 'success');
       } catch (e) { console.error(e); toast('Export failed: ' + (e.message || 'could not draw the outfit'), 'error'); }
     };
   }
@@ -469,7 +470,7 @@ export function createOutfitBuilder(root) {
     if (!list.length) { st.innerHTML = '<div class="empty"><h2>No outfits match</h2></div>'; return; }
     grid.innerHTML = list.map(o => {
       const n = o.items.length;
-      return `<article class="ocard" data-id="${o.id}"><button class="ocard-hit" data-edit aria-label="Edit ${esc(o.name)}">${miniCollage(o)}
+      return tr`<article class="ocard" data-id="${o.id}"><button class="ocard-hit" data-edit aria-label="Edit ${esc(o.name)}">${miniCollage(o)}
         <span class="card-meta"><span class="card-name">${esc(o.name)}</span><span class="card-sub">${n} item${n === 1 ? '' : 's'}${o.occasion ? ' · ' + esc(o.occasion) : ''}</span></span></button>
         ${o.demo ? '<span class="badge demo">Sample</span>' : ''}
         <div class="ocard-actions"><button class="btn tiny ghost" data-edit>Edit</button><button class="btn tiny ghost" data-dup>Duplicate</button><button class="btn tiny ghost" data-exp>Export</button><button class="btn tiny danger-ghost" data-del>Delete</button></div></article>`;
@@ -479,7 +480,7 @@ export function createOutfitBuilder(root) {
     const card = e.target.closest('.ocard'); if (!card) return; const id = card.dataset.id;
     try {
       if (e.target.closest('[data-del]')) await deleteOutfit(id);
-      else if (e.target.closest('[data-dup]')) { await db.duplicateOutfit(id); toast('Outfit duplicated'); }
+      else if (e.target.closest('[data-dup]')) { await db.duplicateOutfit(id); toast(t('Outfit duplicated')); }
       else if (e.target.closest('[data-exp]')) { const o = outfits.find(x => x.id === id); exportDialog(o); }
       else if (e.target.closest('[data-edit]')) openOutfit(id);
     } catch (err) { toast(err.message, 'error'); }

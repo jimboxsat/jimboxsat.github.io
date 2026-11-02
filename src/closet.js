@@ -4,6 +4,7 @@ import { newFilters, activeCount, applyFilters, renderCategoryTabs, openFilterPa
 import { openItemEditor, openItemDetails } from './item-editor.js';
 import { imgSrc, pruneUrlCache } from './image-utils.js';
 import * as weather from './weather.js';
+import { t, tr } from './i18n.js';
 
 export function createCloset(root, { onAddToOutfit, onLoadDemo, onRemoveDemo, onOpenDressMe, onOpenCanvas, onOpenOutfit, onExportOutfit, onDeleteOutfit }) {
   const filters = newFilters();
@@ -13,7 +14,7 @@ export function createCloset(root, { onAddToOutfit, onLoadDemo, onRemoveDemo, on
   let outfits = [], oQuery = '', oSort = 'modified';
   const selected = new Set();
 
-  root.innerHTML = `
+  root.innerHTML = tr`
     <div class="home-strip" id="home-strip">
       <div class="home-hero">
         <p class="home-headline">Your Closet, <em>Reimagined.</em></p>
@@ -77,7 +78,7 @@ export function createCloset(root, { onAddToOutfit, onLoadDemo, onRemoveDemo, on
     fab.hidden = !loaded;
     fab.classList.toggle('active', viewing);
     fab.setAttribute('aria-pressed', viewing ? 'true' : 'false');
-    const fabLabel = viewing ? 'Back to your closet' : 'Show archived items';
+    const fabLabel = viewing ? t('Back to your closet') : t('Show archived items');
     fab.setAttribute('aria-label', fabLabel); fab.title = fabLabel;
     const ac = $('#cl-acount', root); ac.hidden = !arch.length; ac.textContent = arch.length;
     $('#cl-count', root).textContent = cloView === 'outfits'
@@ -92,7 +93,7 @@ export function createCloset(root, { onAddToOutfit, onLoadDemo, onRemoveDemo, on
     if (filters.subcategory) pills.push(['subcategory', filters.subcategory]);
     ['colors', 'brands', 'seasons', 'occasions', 'tags'].forEach(k => filters[k].forEach(v => pills.push([k, v])));
     if (filters.favoritesOnly) pills.push(['favoritesOnly', 'Favorites']);
-    if (filters.archived) pills.push(['archived', 'Archived']);
+    if (filters.archived) pills.push(['archived', t('Archived')]);
     $('#cl-active', root).innerHTML = pills.map(([k, v]) => `<button class="pill removable" data-k="${k}" data-v="${esc(v)}" aria-label="Remove filter ${esc(v)}">${esc(v)} ×</button>`).join('');
     $$('#cl-active [data-k]', root).forEach(b => b.onclick = () => {
       const k = b.dataset.k, v = b.dataset.v;
@@ -102,12 +103,12 @@ export function createCloset(root, { onAddToOutfit, onLoadDemo, onRemoveDemo, on
 
     grid.innerHTML = ''; stateEl.innerHTML = '';
     if (error) {
-      stateEl.innerHTML = `<div class="empty"><h2>We couldn't open your closet</h2><p class="muted">${esc(error.message || 'Storage is unavailable. Private browsing can block it.')}</p><button class="btn primary" id="retry">Try again</button></div>`;
+      stateEl.innerHTML = tr`<div class="empty"><h2>We couldn't open your closet</h2><p class="muted">${esc(error.message || 'Storage is unavailable. Private browsing can block it.')}</p><button class="btn primary" id="retry">Try again</button></div>`;
       $('#retry', root).onclick = load; return;
     }
     if (!loaded) { grid.innerHTML = Array.from({ length: 8 }, () => '<div class="card skeleton"><div class="card-img"></div></div>').join(''); return; }
     if (!items.length) {
-      stateEl.innerHTML = `<div class="empty"><svg viewBox="0 0 120 120" width="110" height="110" aria-hidden="true"><path d="M60 14a10 10 0 0 1 10 10c0 6-6 8-10 12M60 36L14 70a6 6 0 0 0 4 11h84a6 6 0 0 0 4-11L60 36z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/></svg>
+      stateEl.innerHTML = tr`<div class="empty"><svg viewBox="0 0 120 120" width="110" height="110" aria-hidden="true"><path d="M60 14a10 10 0 0 1 10 10c0 6-6 8-10 12M60 36L14 70a6 6 0 0 0 4 11h84a6 6 0 0 0 4-11L60 36z" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/></svg>
         <h2>Your closet is empty</h2><p class="muted">Add your clothes one at a time, or explore a sample wardrobe first.</p>
         <div class="empty-actions"><button class="btn primary big" id="first">Add your first item</button><button class="btn ghost big" id="demo">Explore sample closet</button></div></div>`;
       $('#first', root).onclick = () => add(); $('#demo', root).onclick = onLoadDemo; return;
@@ -116,17 +117,17 @@ export function createCloset(root, { onAddToOutfit, onLoadDemo, onRemoveDemo, on
     if (!shown.length) {
       if (viewing) {
         if (arch.length) {
-          stateEl.innerHTML = `<div class="empty"><h2>No matching archived items</h2><p class="muted">Try a different search or clear your filters.</p><button class="btn ghost" id="clr">Clear search and filters</button></div>`;
+          stateEl.innerHTML = tr`<div class="empty"><h2>No matching archived items</h2><p class="muted">Try a different search or clear your filters.</p><button class="btn ghost" id="clr">Clear search and filters</button></div>`;
           $('#clr', root).onclick = () => { const q = filters.q; Object.assign(filters, newFilters(), { q, archived: true }); $('#cl-search', root).value = ''; render(); };
         } else {
-          stateEl.innerHTML = `<div class="empty"><h2>No archived items</h2><p class="muted">Items you archive will be kept here.</p><button class="btn ghost" id="clr-arch">Back to your closet</button></div>`;
+          stateEl.innerHTML = tr`<div class="empty"><h2>No archived items</h2><p class="muted">Items you archive will be kept here.</p><button class="btn ghost" id="clr-arch">Back to your closet</button></div>`;
           $('#clr-arch', root).onclick = () => { filters.archived = false; render(); };
         }
       } else if (!live.length && arch.length) {
-        stateEl.innerHTML = `<div class="empty"><h2>Nothing to show</h2><p class="muted">Every item in your closet is archived right now.</p><button class="btn ghost" id="clr-arch">View archived items</button></div>`;
+        stateEl.innerHTML = tr`<div class="empty"><h2>Nothing to show</h2><p class="muted">Every item in your closet is archived right now.</p><button class="btn ghost" id="clr-arch">View archived items</button></div>`;
         $('#clr-arch', root).onclick = () => { filters.archived = true; render(); };
       } else {
-        stateEl.innerHTML = `<div class="empty"><h2>No items match</h2><p class="muted">Try a different search or clear your filters.</p><button class="btn ghost" id="clr">Clear search and filters</button></div>`;
+        stateEl.innerHTML = tr`<div class="empty"><h2>No items match</h2><p class="muted">Try a different search or clear your filters.</p><button class="btn ghost" id="clr">Clear search and filters</button></div>`;
         $('#clr', root).onclick = () => { Object.assign(filters, newFilters()); $('#cl-search', root).value = ''; render(); };
       }
       return;
@@ -141,7 +142,7 @@ export function createCloset(root, { onAddToOutfit, onLoadDemo, onRemoveDemo, on
         pick.className = 'pick' + (on ? ' on' : '');
         pick.dataset.pick = '';
         pick.setAttribute('aria-pressed', on ? 'true' : 'false');
-        pick.setAttribute('aria-label', (on ? 'Deselect ' : 'Select ') + i.name);
+        pick.setAttribute('aria-label', (on ? t('Deselect') + ' ' : t('Select') + ' ') + i.name);
         pick.innerHTML = icons.check;
         if (on) c.classList.add('picked');
         c.append(pick);
@@ -150,7 +151,7 @@ export function createCloset(root, { onAddToOutfit, onLoadDemo, onRemoveDemo, on
     });
     grid.append(frag);
     if (items.some(i => i.demo)) {
-      stateEl.innerHTML = `<div class="demo-note">Sample items are marked “Sample”. <button class="link" id="rmdemo">Remove sample content</button></div>`;
+      stateEl.innerHTML = tr`<div class="demo-note">Sample items are marked “Sample”. <button class="link" id="rmdemo">Remove sample content</button></div>`;
       $('#rmdemo', root).onclick = onRemoveDemo;
     }
   }
@@ -214,7 +215,7 @@ export function createCloset(root, { onAddToOutfit, onLoadDemo, onRemoveDemo, on
     $$('.subtab', root).forEach(b => { const on = b.dataset.cltab === tab; b.classList.toggle('active', on); b.setAttribute('aria-selected', on); });
     $('#cl-browser', root).hidden = tab !== 'closet';
     $('#cl-outfits', root).hidden = tab !== 'outfits';
-    $('#cl-title', root).textContent = tab === 'outfits' ? 'My Outfits' : 'My Closet';
+    $('#cl-title', root).textContent = tab === 'outfits' ? t('My Outfits') : t('My Closet');
     if (tab === 'outfits') refreshOutfits();
     else render();
   }
@@ -243,14 +244,14 @@ export function createCloset(root, { onAddToOutfit, onLoadDemo, onRemoveDemo, on
     let list = outfits.filter(o => !q || [o.name, o.occasion, ...(o.tags || [])].join(' ').toLowerCase().includes(q));
     list.sort((a, b) => oSort === 'name' ? a.name.localeCompare(b.name) : oSort === 'created' ? b.createdAt - a.createdAt : b.updatedAt - a.updatedAt);
     if (!outfits.length) {
-      st.innerHTML = `<div class="empty"><h2>No saved outfits yet</h2><p class="muted">Combine pieces from your closet into your first look.</p>${onOpenCanvas ? '<button class="btn primary big" id="clo-first">Create your first outfit</button>' : ''}</div>`;
+      st.innerHTML = tr`<div class="empty"><h2>No saved outfits yet</h2><p class="muted">Combine pieces from your closet into your first look.</p>${onOpenCanvas ? '<button class="btn primary big" id="clo-first">Create your first outfit</button>' : ''}</div>`;
       const first = $('#clo-first', root); if (first) first.onclick = () => onOpenCanvas();
       return;
     }
     if (!list.length) { st.innerHTML = '<div class="empty"><h2>No outfits match</h2></div>'; return; }
     grid.innerHTML = list.map(o => {
       const n = o.items.length;
-      return `<article class="ocard" data-id="${o.id}"><button class="ocard-hit" data-edit aria-label="Edit ${esc(o.name)}">${miniCollage(o)}
+      return tr`<article class="ocard" data-id="${o.id}"><button class="ocard-hit" data-edit aria-label="Edit ${esc(o.name)}">${miniCollage(o)}
         <span class="card-meta"><span class="card-name">${esc(o.name)}</span><span class="card-sub">${n} item${n === 1 ? '' : 's'}${o.occasion ? ' · ' + esc(o.occasion) : ''}</span></span></button>
         ${o.demo ? '<span class="badge demo">Sample</span>' : ''}
         <div class="ocard-actions"><button class="btn tiny ghost" data-edit>Edit</button><button class="btn tiny ghost" data-dup>Duplicate</button><button class="btn tiny ghost" data-exp>Export</button><button class="btn tiny danger-ghost" data-del>Delete</button></div></article>`;
@@ -262,7 +263,7 @@ export function createCloset(root, { onAddToOutfit, onLoadDemo, onRemoveDemo, on
     const id = card.dataset.id;
     try {
       if (e.target.closest('[data-del]')) { if (onDeleteOutfit) await onDeleteOutfit(id); else await db.deleteOutfit(id); }
-      else if (e.target.closest('[data-dup]')) { await db.duplicateOutfit(id); toast('Outfit duplicated'); }
+      else if (e.target.closest('[data-dup]')) { await db.duplicateOutfit(id); toast(t('Outfit duplicated')); }
       else if (e.target.closest('[data-exp]')) { if (onExportOutfit) onExportOutfit(id); }
       else if (e.target.closest('[data-edit]')) { if (onOpenOutfit) onOpenOutfit(id); }
     } catch (err) { toast(err.message, 'error'); }
@@ -281,14 +282,14 @@ export function createCloset(root, { onAddToOutfit, onLoadDemo, onRemoveDemo, on
       pick.classList.toggle('on', on);
       pick.setAttribute('aria-pressed', on ? 'true' : 'false');
       const it = items.find(i => i.id === id);
-      pick.setAttribute('aria-label', (on ? 'Deselect ' : 'Select ') + (it ? it.name : 'item'));
+      pick.setAttribute('aria-label', (on ? t('Deselect') + ' ' : t('Select') + ' ') + (it ? it.name : t('item')));
       card.classList.toggle('picked', on);
       updateBar();
       return;
     }
     if (e.target.closest('[data-fav]')) {
       const it = items.find(i => i.id === id);
-      try { await db.updateItem(id, { favorite: !it.favorite }); } catch (err) { toast('Could not update favorite', 'error'); }
+      try { await db.updateItem(id, { favorite: !it.favorite }); } catch (err) { toast(t('Could not update favorite'), 'error'); }
       return;
     }
     if (e.target.closest('[data-arch]')) { await archiveItem(id); return; }
@@ -327,7 +328,7 @@ export function createCloset(root, { onAddToOutfit, onLoadDemo, onRemoveDemo, on
     try {
       const used = (await db.getOutfits()).filter(o => o.items.some(p => p.itemId === id));
       const msg = used.length ? `"${it.name}" is used in ${used.length} saved outfit${used.length > 1 ? 's' : ''} and will be removed from ${used.length > 1 ? 'them' : 'it'}. This can't be undone.` : `Delete "${it.name}" and its photo from this device? This can't be undone. Archive it instead if you might need it again.`;
-      if (await confirmDialog({ title: 'Delete item?', message: msg, confirmText: 'Delete', danger: true })) { await db.deleteItem(id); toast('Item deleted'); }
+      if (await confirmDialog({ title: t('Delete item?'), message: msg, confirmText: t('Delete'), danger: true })) { await db.deleteItem(id); toast(t('Item deleted')); }
     } catch (err) { toast('Could not delete: ' + err.message, 'error'); }
   }
 

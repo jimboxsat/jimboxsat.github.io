@@ -2,6 +2,7 @@
 import * as db from './database.js';
 import { esc, $, $$, openModal, toast } from './components.js';
 import { blobToImage, canvasToBlob, validateImageFile, cutoutBackground } from './image-utils.js';
+import { t, tr } from './i18n.js';
 
 const ENGINES = {
   google: ['Google Images', q => `https://www.google.com/search?tbm=isch&q=${q}`],
@@ -25,7 +26,7 @@ function makeCropUI({ m, onDone, onBack, onUnload }) {
   }
 
   function stepCrop() {
-    m.el.innerHTML = `
+    m.el.innerHTML = tr`
       <div class="crop-bar">
         <button class="btn small ghost" data-rot="-90">⟲ Rotate</button>
         <button class="btn small ghost" data-rot="90">⟳ Rotate</button>
@@ -41,7 +42,7 @@ function makeCropUI({ m, onDone, onBack, onUnload }) {
       <div class="form-actions"><button class="btn ghost" id="cropBack">Back</button><button class="btn primary" id="cropUse">Use this crop</button></div>`;
     const wrap = $('#cropWrap', m.el);
     wrap.append(work);
-    wrap.insertAdjacentHTML('beforeend', `<div class="crop-box" id="cropBox" aria-label="Crop area"><span class="ch" data-h="nw"></span><span class="ch" data-h="ne"></span><span class="ch" data-h="sw"></span><span class="ch" data-h="se"></span><span class="ch edge" data-h="n"></span><span class="ch edge" data-h="s"></span><span class="ch edge" data-h="e"></span><span class="ch edge" data-h="w"></span></div>`);
+    wrap.insertAdjacentHTML('beforeend', tr`<div class="crop-box" id="cropBox" aria-label="Crop area"><span class="ch" data-h="nw"></span><span class="ch" data-h="ne"></span><span class="ch" data-h="sw"></span><span class="ch" data-h="se"></span><span class="ch edge" data-h="n"></span><span class="ch edge" data-h="s"></span><span class="ch edge" data-h="e"></span><span class="ch edge" data-h="w"></span></div>`);
     const boxEl = $('#cropBox', m.el);
     const paint = () => {
       const W = work.width, H = work.height;
@@ -128,19 +129,19 @@ function makeCropUI({ m, onDone, onBack, onUnload }) {
 export function openScreenshotCropper({ onDone }) {
   let err = () => {};
   const m = openModal({
-    title: 'Add from screenshot', className: 'wide', body: '',
+    title: t('Add from screenshot'), className: 'wide', body: '',
     onClose: () => document.removeEventListener('paste', onPaste)
   });
   const crop = makeCropUI({
     m, onDone,
     onBack: stepSource,
-    onUnload: msg => err(typeof msg === 'string' ? msg : (msg && msg.message) || 'Could not read that image.')
+    onUnload: msg => err(typeof msg === 'string' ? msg : (msg && msg.message) || t('Could not read that image.'))
   });
 
   // ---------- step 1: find + load a screenshot ----------
   function stepSource() {
     const engine = db.settings.get('searchEngine', 'google');
-    m.el.innerHTML = `
+    m.el.innerHTML = tr`
       <div class="shot-grid">
         <div>
           <h3 class="shot-h">1. Find the item</h3>
@@ -197,13 +198,13 @@ export function openScreenshotCropper({ onDone }) {
 // Direct crop: opens the crop UI for an image the user uploaded or pasted.
 export function openImageCropper(file, { onDone } = {}) {
   const m = openModal({
-    title: 'Crop photo', className: 'wide', body: '',
+    title: t('Crop photo'), className: 'wide', body: '',
     onClose: () => document.removeEventListener('paste', onPaste)
   });
   const crop = makeCropUI({
     m, onDone,
     onBack: () => m.close(true),
-    onUnload: msg => { toast(typeof msg === 'string' ? msg : (msg && msg.message) || 'Could not read that image.', 'error'); m.close(true); }
+    onUnload: msg => { toast(typeof msg === 'string' ? msg : (msg && msg.message) || t('Could not read that image.'), 'error'); m.close(true); }
   });
   function onPaste(e) {
     const f = [...(e.clipboardData?.files || [])].find(x => x.type.startsWith('image/'));

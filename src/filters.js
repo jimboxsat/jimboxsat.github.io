@@ -1,6 +1,7 @@
 // Shared filter state + panel, used by both Closet and Outfit Builder selector.
 import { CATEGORIES, MAIN_CATEGORIES, SEASONS, OCCASIONS, COLOR_NAMES } from './categories.js';
 import { esc, openModal, $, $$ } from './components.js';
+import { t, tr } from './i18n.js';
 
 export const newFilters = () => ({
   q: '', category: 'All', subcategory: '', colors: [], brands: [], seasons: [], occasions: [], tags: [],
@@ -64,11 +65,11 @@ export function renderCategoryTabs(container, filters, items, onChange) {
   const counts = categoryCounts(items, { archived: filters.archived });
   const cats = ['All', ...MAIN_CATEGORIES.filter(c => counts[c] || c === filters.category)];
   Object.keys(counts).forEach(c => { if (!cats.includes(c) && counts[c]) cats.push(c); });
-  container.innerHTML = `<div class="chips" role="tablist" aria-label="Categories">${cats.map(c =>
-    `<button class="chip ${filters.category === c ? 'active' : ''}" role="tab" aria-selected="${filters.category === c}" data-cat="${esc(c)}">${esc(c)} <span class="count">${counts[c] || 0}</span></button>`).join('')}</div>
-    ${filters.category !== 'All' && (CATEGORIES[filters.category] || []).length ? `<div class="chips sub" aria-label="Subcategories">
-      <button class="chip small ${!filters.subcategory ? 'active' : ''}" data-sub="">All ${esc(filters.category)}</button>
-      ${CATEGORIES[filters.category].map(s => `<button class="chip small ${filters.subcategory === s ? 'active' : ''}" data-sub="${esc(s)}">${esc(s)}</button>`).join('')}</div>` : ''}`;
+  container.innerHTML = tr`<div class="chips" role="tablist" aria-label="Categories">${cats.map(c =>
+    `<button class="chip ${filters.category === c ? 'active' : ''}" role="tab" aria-selected="${filters.category === c}" data-cat="${esc(c)}">${esc(t(c))} <span class="count">${counts[c] || 0}</span></button>`).join('')}</div>
+    ${filters.category !== 'All' && (CATEGORIES[filters.category] || []).length ? tr`<div class="chips sub" aria-label="Subcategories">
+      <button class="chip small ${!filters.subcategory ? 'active' : ''}" data-sub="">${esc(t('All'))} ${esc(t(filters.category))}</button>
+      ${CATEGORIES[filters.category].map(s => `<button class="chip small ${filters.subcategory === s ? 'active' : ''}" data-sub="${esc(s)}">${esc(t(s))}</button>`).join('')}</div>` : ''}`;
   $$('[data-cat]', container).forEach(b => b.onclick = () => { filters.category = b.dataset.cat; filters.subcategory = ''; onChange(); });
   $$('[data-sub]', container).forEach(b => b.onclick = () => { filters.subcategory = b.dataset.sub; onChange(); });
 }
@@ -78,19 +79,19 @@ export function openFilterPanel(filters, items, onApply, opts = {}) {
   const brands = [...new Set(items.map(i => i.brand).filter(Boolean))].sort();
   const tags = [...new Set(items.flatMap(i => i.tags || []))].sort();
   const multi = (key, opts, label) => `<fieldset><legend>${label}</legend><div class="chips wrap">${opts.length ? opts.map(o =>
-    `<button type="button" class="chip small ${draft[key].includes(o) ? 'active' : ''}" data-multi="${key}" data-val="${esc(o)}" aria-pressed="${draft[key].includes(o)}">${esc(o)}</button>`).join('') : '<span class="muted small">Nothing to filter by yet</span>'}</div></fieldset>`;
+    `<button type="button" class="chip small ${draft[key].includes(o) ? 'active' : ''}" data-multi="${key}" data-val="${esc(o)}" aria-pressed="${draft[key].includes(o)}">${esc(t(o))}</button>`).join('') : '<span class="muted small">Nothing to filter by yet</span>'}</div></fieldset>`;
 
-  const m = openModal({ title: 'Filters', className: 'panel', body: '' });
+  const m = openModal({ title: t('Filters'), className: 'panel', body: '' });
   const render = () => {
     const subs = draft.category !== 'All' ? CATEGORIES[draft.category] || [] : [];
-    m.el.innerHTML = `<form class="filter-form">
-      <label class="field"><span>Main category</span><select name="category">${['All', ...MAIN_CATEGORIES].map(c => `<option ${c === draft.category ? 'selected' : ''}>${esc(c)}</option>`).join('')}</select></label>
-      <label class="field"><span>Subcategory</span><select name="subcategory" ${subs.length ? '' : 'disabled'}><option value="">Any</option>${subs.map(s => `<option ${s === draft.subcategory ? 'selected' : ''}>${esc(s)}</option>`).join('')}</select></label>
-      ${multi('colors', COLOR_NAMES, 'Color')}
-      ${multi('brands', brands, 'Brand')}
-      ${multi('seasons', SEASONS, 'Season')}
-      ${multi('occasions', OCCASIONS, 'Occasion')}
-      ${multi('tags', tags, 'Style tags')}
+    m.el.innerHTML = tr`<form class="filter-form">
+      <label class="field"><span>Main category</span><select name="category">${['All', ...MAIN_CATEGORIES].map(c => `<option value="${esc(c)}" ${c === draft.category ? 'selected' : ''}>${esc(t(c))}</option>`).join('')}</select></label>
+      <label class="field"><span>Subcategory</span><select name="subcategory" ${subs.length ? '' : 'disabled'}><option value="">Any</option>${subs.map(s => `<option value="${esc(s)}" ${s === draft.subcategory ? 'selected' : ''}>${esc(t(s))}</option>`).join('')}</select></label>
+      ${multi('colors', COLOR_NAMES, t('Color'))}
+      ${multi('brands', brands, t('Brand'))}
+      ${multi('seasons', SEASONS, t('Season'))}
+      ${multi('occasions', OCCASIONS, t('Occasion'))}
+      ${multi('tags', tags, t('Style tags'))}
       <label class="check"><input type="checkbox" name="favoritesOnly" ${draft.favoritesOnly ? 'checked' : ''}> Favorites only</label>
       <label class="field"><span>Sort</span><select name="sort">
         <option value="newest" ${draft.sort === 'newest' ? 'selected' : ''}>Newest added</option>

@@ -1,4 +1,5 @@
 import { imgSrc } from './image-utils.js';
+import { t, tr } from './i18n.js';
 
 export const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 export const $ = (sel, root = document) => root.querySelector(sel);
@@ -48,7 +49,7 @@ export function openModal({ title, body, className = '', onClose, closeOnBackdro
   const prev = document.activeElement;
   const wrap = document.createElement('div');
   wrap.className = 'modal-backdrop';
-  wrap.innerHTML = `<div class="modal ${className}" role="dialog" aria-modal="true" aria-label="${esc(title)}" tabindex="-1">
+  wrap.innerHTML = tr`<div class="modal ${className}" role="dialog" aria-modal="true" aria-label="${esc(title)}" tabindex="-1">
     <header class="modal-head"><h2>${esc(title)}</h2><button class="icon-btn" data-close aria-label="Close">${icons.close}</button></header>
     <div class="modal-body"></div></div>`;
   const dlg = $('.modal', wrap);
@@ -89,12 +90,12 @@ export function openModal({ title, body, className = '', onClose, closeOnBackdro
   return api;
 }
 
-export function confirmDialog({ title, message, confirmText = 'Confirm', danger = false }) {
+export function confirmDialog({ title, message, confirmText = t('Confirm'), danger = false }) {
   return new Promise(resolve => {
     let done = false;
     const m = openModal({
       title, className: 'small',
-      body: `<p class="muted">${esc(message)}</p><div class="form-actions"><button class="btn ghost" data-no>Cancel</button><button class="btn ${danger ? 'danger' : 'primary'}" data-yes autofocus>${esc(confirmText)}</button></div>`,
+      body: tr`<p class="muted">${esc(message)}</p><div class="form-actions"><button class="btn ghost" data-no>Cancel</button><button class="btn ${danger ? 'danger' : 'primary'}" data-yes autofocus>${esc(confirmText)}</button></div>`,
       onClose: () => { if (!done) resolve(false); }
     });
     $('[data-no]', m.el).onclick = () => { done = true; m.close(true); resolve(false); };
@@ -115,7 +116,7 @@ export function itemCard(item, { selected = false, selectable = false, showFav =
     ${archivable ? `<button class="card-arch" data-arch aria-label="Archive ${esc(item.name)}">${icons.archive}</button>` : ''}
     ${item.demo ? '<span class="badge demo">Sample</span>' : ''}
     ${item.archived ? '<span class="badge arch">Archived</span>' : ''}
-    ${showFav ? `<button class="fav ${item.favorite ? 'on' : ''}" data-fav aria-label="${item.favorite ? 'Unfavorite' : 'Favorite'} ${esc(item.name)}" aria-pressed="${!!item.favorite}">${icons.star}</button>` : ''}
+    ${showFav ? `<button class="fav ${item.favorite ? 'on' : ''}" data-fav aria-label="${item.favorite ? 'Unfavorite' : t('Favorite')} ${esc(item.name)}" aria-pressed="${!!item.favorite}">${icons.star}</button>` : ''}
     ${selectable ? `<span class="sel-mark" aria-hidden="true">${icons.check}</span><button class="peek" data-peek aria-label="Preview ${esc(item.name)}">${icons.eye}</button>` : ''}`;
   const img = $('img', el);
   img.onerror = () => { img.onerror = null; img.src = ''; img.removeAttribute('src'); el.querySelector('.card-img').classList.add('noimg'); };

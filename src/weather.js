@@ -3,6 +3,7 @@
 // 30 minutes so the last reading still shows offline.
 import * as db from './database.js';
 import { esc, toast } from './components.js';
+import { t, tr } from './i18n.js';
 
 const GEO = 'https://geocoding-api.open-meteo.com/v1/search';
 const FC = 'https://api.open-meteo.com/v1/forecast';
@@ -96,7 +97,7 @@ export function mountWeather({ host, chip }) {
 
   function draw(d) {
     const [cond, ico] = codeInfo(d.current.code);
-    host.innerHTML = `<div class="wx-top">
+    host.innerHTML = tr`<div class="wx-top">
         <span class="wx-ico">${ico}</span>
         <div class="wx-now"><b>${d.current.temp}°</b><span>${cond}</span></div>
         <div class="wx-place"><span class="wx-city">${esc(shortPlace(city().label))}</span><span class="wx-feels">Feels ${d.current.feels}°</span></div>
@@ -116,7 +117,7 @@ export function mountWeather({ host, chip }) {
 
   function fail(msg) {
     const c = city();
-    host.innerHTML = `<div class="wx-top">
+    host.innerHTML = tr`<div class="wx-top">
         <span class="wx-ico">⚠️</span>
         <div class="wx-now"><b>—</b><span>Weather unavailable</span></div>
         <div class="wx-place"><span class="wx-city">${esc(shortPlace(c.label))}</span></div>
@@ -143,7 +144,7 @@ export function mountWeather({ host, chip }) {
 
   function drawSetup() {
     const c = city();
-    host.innerHTML = `<form class="wx-setup">
+    host.innerHTML = tr`<form class="wx-setup">
         <span class="wx-setup-title">Which city?</span>
         <div class="wx-setup-row">
           <input id="wCityIn" class="wx-input" placeholder="City name" aria-label="Weather city" maxlength="60" autocomplete="off" value="${c ? esc(shortPlace(c.label)) : ''}">
@@ -158,9 +159,9 @@ export function mountWeather({ host, chip }) {
       go.disabled = true;
       try {
         const found = await resolveCity(inp.value);
-        if (!found) { toast('No matching city — try another name.', 'error'); return; }
+        if (!found) { toast(t('No matching city — try another name.'), 'error'); return; }
         setCity(found);
-      } catch (e2) { toast(e2.message || 'Could not find that city.', 'error'); }
+      } catch (e2) { toast(e2.message || t('Could not find that city.'), 'error'); }
       finally { go.disabled = false; }
     };
     setTimeout(() => inp.focus(), 30);

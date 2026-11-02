@@ -6,47 +6,16 @@ import * as db from './database.js';
 import * as gdrive from './gdrive.js';
 import * as notif from './notifications.js';
 import { setTheme } from './settings.js';
+import { t, tr, lang, setLang, LANGS, LANG_LABEL } from './i18n.js';
 
-// Only this shell is translated so far; the rest of the app is still English.
-const STRINGS = {
-  en: {
-    'nav.closet': 'Closet', 'nav.outfits': 'Outfit Builder',
-    'menu.account': 'Account menu', 'menu.viewProfile': 'View Profile', 'menu.settings': 'Settings',
-    'menu.theme': 'Theme', 'menu.language': 'Language',
-    'theme.light': 'Light theme', 'theme.system': 'System theme', 'theme.dark': 'Dark theme',
-    'notif.label': 'Notifications', 'notif.title': 'Notifications', 'notif.empty': 'No notifications yet.',
-    'notif.markRead': 'Mark all read',
-    'notif.welcomeTitle': 'Welcome to Atelier!',
-    'notif.welcomeBody': "We're glad you're here. Explore the platform and keep an eye on your notifications for helpful updates and announcements.",
-    'notif.syncTitle': 'Google Drive synced',
-    'sync.label': 'Sync with Google Drive', 'sync.syncing': 'Synchronizing…',
-    'sync.done': 'Sync completed successfully.', 'sync.fail': 'Synchronization failed.',
-    'sync.off': 'Google Drive not connected.',
-    'profile.title': 'Profile', 'profile.name': 'Your name', 'profile.anon': 'No name yet',
-    'profile.note': 'Used for the greeting on your home page. Everything stays on this device.',
-    'profile.save': 'Save', 'profile.saved': 'Profile saved.',
-    'time.now': 'just now', 'time.min': 'm ago', 'time.hour': 'h ago', 'time.day': 'd ago'
-  },
-  es: {
-    'nav.closet': 'Armario', 'nav.outfits': 'Crear looks',
-    'menu.account': 'Menú de cuenta', 'menu.viewProfile': 'Ver perfil', 'menu.settings': 'Ajustes',
-    'menu.theme': 'Tema', 'menu.language': 'Idioma',
-    'theme.light': 'Tema claro', 'theme.system': 'Tema del sistema', 'theme.dark': 'Tema oscuro',
-    'notif.label': 'Notificaciones', 'notif.title': 'Notificaciones', 'notif.empty': 'Aún no hay notificaciones.',
-    'notif.markRead': 'Marcar como leídas',
-    'notif.welcomeTitle': '¡Bienvenido a Atelier!',
-    'notif.welcomeBody': 'Nos alegra tenerte aquí. Explora la aplicación y revisa tus notificaciones para ver novedades y anuncios.',
-    'notif.syncTitle': 'Google Drive sincronizado',
-    'sync.label': 'Sincronizar con Google Drive', 'sync.syncing': 'Sincronizando…',
-    'sync.done': 'Sincronización completada.', 'sync.fail': 'La sincronización falló.',
-    'sync.off': 'Google Drive no está conectado.',
-    'profile.title': 'Perfil', 'profile.name': 'Tu nombre', 'profile.anon': 'Sin nombre',
-    'profile.note': 'Se usa en el saludo de tu página de inicio. Todo se queda en este dispositivo.',
-    'profile.save': 'Guardar', 'profile.saved': 'Perfil guardado.',
-    'time.now': 'ahora mismo', 'time.min': 'min', 'time.hour': 'h', 'time.day': 'd'
-  }
+
+// Notifications created before the phrase dictionary existed stored key names; map them to text.
+const LEGACY = {
+  'notif.welcomeTitle': 'Welcome to Atelier!',
+  'notif.welcomeBody': "We're glad you're here. Explore the platform and keep an eye on your notifications for helpful updates and announcements.",
+  'notif.syncTitle': 'Google Drive synced'
 };
-const CODE = { en: 'EN', es: 'ES' };
+const THEME_LABEL = { light: 'Light theme', system: 'System theme', dark: 'Dark theme' };
 
 export function createTopMenu({ onSettings, onConnectDrive } = {}) {
   const root = $('#topNav');
@@ -62,8 +31,6 @@ export function createTopMenu({ onSettings, onConnectDrive } = {}) {
 
   let open = null;   // 'account' | 'notif' | null
 
-  const lang = () => { const v = db.settings.get('lang', 'en'); return STRINGS[v] ? v : 'en'; };
-  const t = k => (STRINGS[lang()][k] ?? STRINGS.en[k] ?? k);
   const initial = () => (db.getProfile().nickname || '').trim().charAt(0).toUpperCase();
 
   // ---------- avatars & labels ----------
@@ -76,11 +43,11 @@ export function createTopMenu({ onSettings, onConnectDrive } = {}) {
   function updateIndicators() {
     const n = notif.unreadCount();
     dot.hidden = n === 0;
-    notifBtn.setAttribute('aria-label', n ? `${t('notif.label')} (${n})` : t('notif.label'));
-    notifBtn.title = t('notif.label');
-    syncBtn.setAttribute('aria-label', t('sync.label'));
-    syncBtn.title = t('sync.label');
-    accountBtn.setAttribute('aria-label', t('menu.account'));
+    notifBtn.setAttribute('aria-label', n ? `${t('Notifications')} (${n})` : t('Notifications'));
+    notifBtn.title = t('Notifications');
+    syncBtn.setAttribute('aria-label', t('Sync with Google Drive'));
+    syncBtn.title = t('Sync with Google Drive');
+    accountBtn.setAttribute('aria-label', t('Account menu'));
   }
 
   function applyLang() {
@@ -124,24 +91,24 @@ export function createTopMenu({ onSettings, onConnectDrive } = {}) {
     const theme = db.settings.get('theme', 'system');
     const ch = initial();
     const seg = [['light', 'sun'], ['system', 'monitor'], ['dark', 'moon']].map(([v, ico]) =>
-      `<button type="button" data-theme-set="${v}" aria-pressed="${theme === v}" aria-label="${esc(t('theme.' + v))}" title="${esc(t('theme.' + v))}">${icons[ico]}</button>`).join('');
+      `<button type="button" data-theme-set="${v}" aria-pressed="${theme === v}" aria-label="${esc(t(THEME_LABEL[v]))}" title="${esc(t(THEME_LABEL[v]))}">${icons[ico]}</button>`).join('');
     accountMenu.innerHTML = `
       <button class="tm-row" data-act="profile">
-        <span>${esc(t('menu.viewProfile'))}</span>
+        <span>${esc(t('View Profile'))}</span>
         <span class="tm-avatar-sm" aria-hidden="true">${ch ? esc(ch) : icons.user}</span>
       </button>
       <button class="tm-row" data-act="settings">
-        <span>${esc(t('menu.settings'))}</span>${icons.gear}
+        <span>${esc(t('Settings'))}</span>${icons.gear}
       </button>
       <div class="tm-sep" role="separator"></div>
       <div class="tm-row tm-static">
-        <span>${esc(t('menu.theme'))}</span>
-        <div class="tm-seg" role="group" aria-label="${esc(t('menu.theme'))}">${seg}</div>
+        <span>${esc(t('Theme'))}</span>
+        <div class="tm-seg" role="group" aria-label="${esc(t('Theme'))}">${seg}</div>
       </div>
       <div class="tm-row tm-static">
-        <span>${esc(t('menu.language'))}</span>
-        <select class="tm-pill" id="tmLang" aria-label="${esc(t('menu.language'))}">
-          ${Object.keys(STRINGS).map(k => `<option value="${k}"${k === lang() ? ' selected' : ''}>${CODE[k]}</option>`).join('')}
+        <span>${esc(t('Language'))}</span>
+        <select class="tm-pill" id="tmLang" aria-label="${esc(t('Language'))}">
+          ${LANGS.map(k => `<option value="${k}"${k === lang() ? ' selected' : ''}>${LANG_LABEL[k]}</option>`).join('')}
         </select>
       </div>`;
   }
@@ -149,18 +116,18 @@ export function createTopMenu({ onSettings, onConnectDrive } = {}) {
   // ---------- notifications panel ----------
   function when(at) {
     const s = Math.round((Date.now() - at) / 1000);
-    if (s < 60) return t('time.now');
-    const m = Math.round(s / 60); if (m < 60) return `${m} ${t('time.min')}`;
-    const h = Math.round(m / 60); if (h < 24) return `${h} ${t('time.hour')}`;
-    const d = Math.round(h / 24); if (d < 7) return `${d} ${t('time.day')}`;
+    if (s < 60) return t('just now');
+    const m = Math.round(s / 60); if (m < 60) return `${m} ${t('m ago')}`;
+    const h = Math.round(m / 60); if (h < 24) return `${h} ${t('h ago')}`;
+    const d = Math.round(h / 24); if (d < 7) return `${d} ${t('d ago')}`;
     return new Date(at).toLocaleDateString();
   }
 
   function renderNotif() {
     const items = notif.list();
     const rows = items.map(n => {
-      const title = n.titleKey ? t(n.titleKey) : esc(n.title || '');
-      const body = n.bodyKey ? t(n.bodyKey) : esc(n.body || '');
+      const title = esc(t(LEGACY[n.titleKey] || n.title || ''));
+      const body = esc(t(LEGACY[n.bodyKey] || n.body || ''));
       return `<li class="notif-item${n.read ? '' : ' unread'}">
         <strong>${title}</strong>
         ${body ? `<p>${body}</p>` : ''}
@@ -169,10 +136,10 @@ export function createTopMenu({ onSettings, onConnectDrive } = {}) {
     }).join('');
     notifMenu.innerHTML = `
       <div class="notif-head">
-        <h2>${esc(t('notif.title'))}</h2>
-        ${items.some(n => !n.read) ? `<button class="tm-link" data-act="readAll">${esc(t('notif.markRead'))}</button>` : ''}
+        <h2>${esc(t('Notifications'))}</h2>
+        ${items.some(n => !n.read) ? `<button class="tm-link" data-act="readAll">${esc(t('Mark all read'))}</button>` : ''}
       </div>
-      ${items.length ? `<ul class="notif-list">${rows}</ul>` : `<p class="notif-empty">${esc(t('notif.empty'))}</p>`}`;
+      ${items.length ? `<ul class="notif-list">${rows}</ul>` : `<p class="notif-empty">${esc(t('No notifications yet.'))}</p>`}`;
   }
 
   // ---------- profile dialog (the app has no separate profile page) ----------
@@ -181,19 +148,19 @@ export function createTopMenu({ onSettings, onConnectDrive } = {}) {
     let items = [], outfits = [];
     try { [items, outfits] = await Promise.all([db.getItems(), db.getOutfits()]); } catch (e) { console.error(e); }
     const m = openModal({
-      title: t('profile.title'), className: 'small',
-      body: `<div class="pf-head">
+      title: t('Profile'), className: 'small',
+      body: tr`<div class="pf-head">
           <span class="pf-avatar" aria-hidden="true">${name ? esc(name.charAt(0).toUpperCase()) : icons.user}</span>
-          <div><p class="pf-name">${esc(name || t('profile.anon'))}</p>
+          <div><p class="pf-name">${esc(name || t('No name yet'))}</p>
           <p class="muted small">${items.length} item${items.length === 1 ? '' : 's'} · ${outfits.length} outfit${outfits.length === 1 ? '' : 's'}</p></div>
         </div>
-        <label class="field"><span>${esc(t('profile.name'))}</span><input id="pfName" maxlength="30" value="${esc(name)}" placeholder="e.g. Alex" autocomplete="nickname"></label>
-        <p class="muted small">${esc(t('profile.note'))}</p>
-        <div class="form-actions"><button class="btn primary" data-save autofocus>${esc(t('profile.save'))}</button></div>`
+        <label class="field"><span>${esc(t('Your name'))}</span><input id="pfName" maxlength="30" value="${esc(name)}" placeholder="e.g. Alex" autocomplete="nickname"></label>
+        <p class="muted small">${esc(t('Used for the greeting on your home page. Everything stays on this device.'))}</p>
+        <div class="form-actions"><button class="btn primary" data-save autofocus>${esc(t('Save'))}</button></div>`
     });
     $('[data-save]', m.el).onclick = () => {
       db.setProfile({ nickname: $('#pfName', m.el).value.trim() });
-      toast(t('profile.saved'), 'success');
+      toast(t('Profile saved.'), 'success');
       m.close(true);
     };
   }
@@ -202,23 +169,23 @@ export function createTopMenu({ onSettings, onConnectDrive } = {}) {
   async function doSync() {
     if (syncBtn.getAttribute('aria-busy') === 'true') return;
     if (!gdrive.configured()) {
-      toast(t('sync.off'), 'error');
+      toast(t('Google Drive not connected.'), 'error');
       close();
       if (onConnectDrive) onConnectDrive();
       return;
     }
     syncBtn.setAttribute('aria-busy', 'true');
     syncBtn.classList.add('busy');
-    toast(t('sync.syncing'));
+    toast(t('Synchronizing…'));
     try {
       const r = await gdrive.sync();          // resolves only after the Drive upload and local merge
       const detail = `${r.items} item${r.items === 1 ? '' : 's'} · ${r.outfits} outfit${r.outfits === 1 ? '' : 's'}`;
-      toast(`${t('sync.done')} ${detail}.`, 'success');
-      notif.add({ kind: 'sync', titleKey: 'notif.syncTitle', body: detail + (r.fromDrive ? ' · merged with Drive' : '') });
+      toast(`${t('Sync completed successfully.')} ${detail}.`, 'success');
+      notif.add({ kind: 'sync', title: 'Google Drive synced', body: detail + (r.fromDrive ? ' · merged with Drive' : '') });
       updateIndicators();
     } catch (err) {
       console.error(err);
-      toast((err && err.message) || t('sync.fail'), 'error');
+      toast((err && err.message) || t('Synchronization failed.'), 'error');
     } finally {
       syncBtn.removeAttribute('aria-busy');
       syncBtn.classList.remove('busy');
@@ -246,8 +213,7 @@ export function createTopMenu({ onSettings, onConnectDrive } = {}) {
 
   accountMenu.addEventListener('change', e => {
     if (e.target.id !== 'tmLang') return;
-    db.settings.set('lang', e.target.value);
-    applyLang();
+    setLang(e.target.value);   // stores the language and reloads in it
   });
 
   notifMenu.addEventListener('click', e => {

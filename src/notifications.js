@@ -18,7 +18,7 @@ function save(items) { settings.set(KEY, items.slice(0, MAX)); emit(); }
 
 export const unreadCount = () => list().filter(n => !n.read).length;
 
-// titleKey / bodyKey are resolved when the panel renders, so a language change translates them too.
+// Entries store plain English text; the panel translates it when it renders (i18n.js).
 export function add({ title, body, titleKey, bodyKey, kind = 'info' } = {}) {
   const items = list();
   const last = items[0];
@@ -44,5 +44,9 @@ export function markAllRead() {
 export function ensureWelcome() {
   if (settings.get('notifWelcomed', false)) return;
   settings.set('notifWelcomed', true);
-  add({ kind: 'welcome', titleKey: 'notif.welcomeTitle', bodyKey: 'notif.welcomeBody' });
+  add({
+    kind: 'welcome',
+    title: 'Welcome to Atelier!',
+    body: "We're glad you're here. Explore the platform and keep an eye on your notifications for helpful updates and announcements."
+  });
 }

@@ -6,11 +6,12 @@ import { newFilters, activeCount, applyFilters, openFilterPanel } from './filter
 import { imgSrc, blobToImage, loadImage } from './image-utils.js';
 import { defaultBox, ROLE_LAYER } from './outfit-builder.js';
 import * as weather from './weather.js';
+import { t, tr } from './i18n.js';
 
 const ROWS = [
-  { role: 'top', label: 'Tops', one: 'tops' },
-  { role: 'bottom', label: 'Bottoms', one: 'bottoms' },
-  { role: 'shoes', label: 'Shoes', one: 'shoes' }
+  { role: 'top', label: t('Tops'), one: 'tops' },
+  { role: 'bottom', label: t('Bottoms'), one: 'bottoms' },
+  { role: 'shoes', label: t('Shoes'), one: 'shoes' }
 ];
 const ICON = {
   dice: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="4"/><circle cx="8.5" cy="8.5" r="1.1" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1.1" fill="currentColor"/><circle cx="12" cy="12" r="1.1" fill="currentColor"/><circle cx="8.5" cy="15.5" r="1.1" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1.1" fill="currentColor"/></svg>',
@@ -96,7 +97,7 @@ export function createDressMe(root, { onOpenInCanvas }) {
     // The items repeat across several copies so both ends always have runway; kutch()
     // shifts the run invisibly as the view scrolls, making the strip feel endless.
     const cells = Array.from({ length: COPIES }, (_, c) => itemCells(c)).join('');
-    return `<section class="dm-row" data-role="${r.role}">
+    return tr`<section class="dm-row" data-role="${r.role}">
       <div class="dm-row-head"><button class="dm-pin" data-pin="${r.role}" aria-pressed="false" aria-label="Pin ${r.one} (the dice skips pinned rows)" title="Pin: the dice skips this row">${ICON.pin}</button></div>
       ${list.length ? `<div class="dm-strip" role="listbox" aria-label="${r.label}" tabindex="0">${cells}</div>`
         : `<p class="dm-empty muted">No ${r.one} ${activeCount(filters) ? 'match your filters' : 'in your closet yet'}.</p>`}
@@ -127,12 +128,12 @@ export function createDressMe(root, { onOpenInCanvas }) {
     const have = items.some(i => !i.archived && ROWS.some(r => layoutRole(i) === r.role));
     for (const r of ROWS) active[r.role] = 1;
     if (!have) {
-      root.innerHTML = `<div class="empty"><h2>Nothing to dress yet</h2><p class="muted">Add tops, bottoms and shoes to your closet to start rolling outfits.</p>
+      root.innerHTML = tr`<div class="empty"><h2>Nothing to dress yet</h2><p class="muted">Add tops, bottoms and shoes to your closet to start rolling outfits.</p>
         <div class="empty-actions"><button class="btn primary" data-go-closet>Go to closet</button></div></div>`;
       return;
     }
     const n = activeCount(filters);
-    root.innerHTML = `<div class="dm">
+    root.innerHTML = tr`<div class="dm">
       <div class="dm-head">
         <button class="dm-round" data-filter aria-label="Filters">${icons.filter}<span class="badge-count" ${n ? '' : 'hidden'}>${n}</span></button>
         <h2>Dress me</h2>
@@ -218,7 +219,7 @@ export function createDressMe(root, { onOpenInCanvas }) {
 
   function roll() {
     const free = ROWS.map(r => r.role).filter(r => !pinned[r] && pool[r].length);
-    if (!free.length) return toast(ROWS.every(r => !pool[r.role].length) ? 'Nothing to roll yet.' : 'Everything is pinned. Unpin a row to roll it.');
+    if (!free.length) return toast(ROWS.every(r => !pool[r.role].length) ? t('Nothing to roll yet.') : t('Everything is pinned. Unpin a row to roll it.'));
     const dice = $('[data-dice]', root); dice.classList.remove('rolling'); void dice.offsetWidth; dice.classList.add('rolling');
     const current = ROWS.map(r => sel[r.role]).join('|');
     let msg = 'Random pick.';
@@ -265,17 +266,17 @@ export function createDressMe(root, { onOpenInCanvas }) {
     return db.addOutfit({ name, items: placements });
   }
   function saveDialog() {
-    if (!selected().length) return toast('Pick at least one piece first.', 'error');
+    if (!selected().length) return toast(t('Pick at least one piece first.'), 'error');
     const def = 'Look ' + new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
     const m = openModal({
-      title: 'Save this look', className: 'small',
-      body: `<form id="dm-form"><label class="field"><span>Name</span><input id="dm-name" maxlength="60" value="${esc(def)}" autofocus></label>
+      title: t('Save this look'), className: 'small',
+      body: tr`<form id="dm-form"><label class="field"><span>Name</span><input id="dm-name" maxlength="60" value="${esc(def)}" autofocus></label>
         <div class="form-actions"><button type="button" class="btn ghost" data-no>Cancel</button><button type="submit" class="btn primary">Save to My Outfits</button></div></form>`
     });
     $('[data-no]', m.el).onclick = () => m.close(true);
     $('#dm-form', m.el).onsubmit = async e => {
       e.preventDefault();
-      try { await saveLook($('#dm-name', m.el).value.trim() || def); m.close(true); toast('Saved to My Outfits', 'success'); }
+      try { await saveLook($('#dm-name', m.el).value.trim() || def); m.close(true); toast(t('Saved to My Outfits'), 'success'); }
       catch (err) { toast('Could not save: ' + err.message, 'error'); }
     };
   }
@@ -303,7 +304,7 @@ export function createDressMe(root, { onOpenInCanvas }) {
     if (e.target.closest('[data-filter]')) return openFilterPanel(filters, items.filter(i => !i.archived), load, { hideCategory: true });
     if (e.target.closest('[data-canvas]')) {
       const ids = selected().map(i => i.id);
-      if (!ids.length) return toast('Pick at least one piece first.', 'error');
+      if (!ids.length) return toast(t('Pick at least one piece first.'), 'error');
       onOpenInCanvas(ids);
     }
   });

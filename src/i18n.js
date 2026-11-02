@@ -1,0 +1,491 @@
+// Language support. The dictionary is keyed by the English source string and generated from
+// translations/greek-string-list.md, so the same text you see in the interface is the key you
+// fill in there. Anything without a Greek entry simply stays English — nothing breaks.
+import * as db from './database.js';
+
+export const LANGS = ['en', 'el'];
+export const LANG_LABEL = { en: 'EN', el: 'EL' };
+
+const EL = {
+  '+ New outfit': '+ Νέο σύνολο',
+  '1. Find the item': '1. Βρείτε το είδος',
+  '2. Take a screenshot': '2. Τραβήξτε ένα στιγμιότυπο οθόνης',
+  '3. Paste or upload it': '3. Επικολλήστε ή μεταφορτώστε το',
+  'A backup is one file with your items, photos and outfits. When importing you can merge it into this device or replace everything with it.': 'Το αντίγραφο ασφαλείας είναι ένα αρχείο που περιέχει τα είδη, τις φωτογραφίες και τα outfit σας. Κατά την εισαγωγή, μπορείτε είτε να το συγχωνεύσετε με τα δεδομένα αυτής της συσκευής είτε να τα αντικαταστήσετε όλα.',
+  'A private digital closet and outfit builder. Add your clothes once, then mix and match them into outfits.': 'Μια ιδιωτική ψηφιακή ντουλάπα και εφαρμογή δημιουργίας outfit. Προσθέστε τα ρούχα σας μία φορά και, στη συνέχεια, συνδυάστε τα για να δημιουργήσετε outfits.',
+  'About': 'Σχετικά',
+  'Account': 'Λογαριασμός',
+  'Account menu': 'Μενού λογαριασμού',
+  'Add a photo': 'Προσθήκη φωτογραφίας',
+  'Add an additional color': 'Προσθήκη επιπλέον χρώματος',
+  'Add at least one item before saving.': 'Προσθέστε τουλάχιστον ένα είδος πριν από την αποθήκευση.',
+  'Add at least two items to your closet to shuffle outfits.': 'Προσθέστε τουλάχιστον δύο είδη στη ντουλάπα σας για να ανακατέψετε τα outfits.',
+  'Add from screenshot': 'Προσθήκη από στιγμιότυπο οθόνης',
+  'Add item': 'Προσθήκη είδους',
+  'Add tag': 'Προσθήκη ετικέτας',
+  'Add the backup and replace any items with matching IDs. Everything else on this device stays.': 'Προσθέτει το αντίγραφο ασφαλείας και αντικαθιστά όσα είδη έχουν ίδια αναγνωριστικά. Όλα τα υπόλοιπα δεδομένα σε αυτή τη συσκευή διατηρούνται.',
+  'Add to outfit': 'Προσθήκη στο outfit',
+  'Add tops, bottoms and shoes to your closet to start rolling outfits.': 'Προσθέστε μπλούζες, παντελόνια και παπούτσια στη ντουλάπα σας για να ξεκινήσετε να δημιουργείτε outfits.',
+  'Add your clothes one at a time, or explore a sample wardrobe first.': 'Προσθέστε τα ρούχα σας ένα προς ένα ή εξερευνήστε πρώτα μια δοκιμαστική ντουλάπα.',
+  'Add your first item': 'Προσθέστε το πρώτο σας είδος',
+  'Add your Google client ID in Settings to turn on Google Drive sync.': 'Προσθέστε το αναγνωριστικό πελάτη Google στις Ρυθμίσεις για να ενεργοποιήσετε τον συγχρονισμό με το Google Drive.',
+  'Adding items from the web': 'Προσθήκη ειδών από τον ιστό',
+  'Additional colors': 'Επιπλέον χρώματα',
+  'All': 'Όλα',
+  'All items, photos and outfits will be permanently removed from this device. Export a backup first if you might want them back.': 'Όλα τα είδη, οι φωτογραφίες και τα outfit θα διαγραφούν οριστικά από αυτή τη συσκευή. Εξαγάγετε πρώτα ένα αντίγραφο ασφαλείας, αν υπάρχει πιθανότητα να θελήσετε να τα επαναφέρετε.',
+  'Already in this outfit': 'Υπάρχει ήδη σε αυτό το outfit',
+  'Any': 'Οποιαδήποτε',
+  'Appearance': 'Εμφάνιση',
+  'Archived': 'Αρχειοθετημένα',
+  'Archived items can’t be used in new outfits. Restore it first.': 'Τα αρχειοθετημένα είδη δεν μπορούν να χρησιμοποιηθούν σε νέα outfit. Επαναφέρετέ το πρώτα.',
+  'Archived items can’t be used. Restore it first.': 'Τα αρχειοθετημένα είδη δεν μπορούν να χρησιμοποιηθούν. Επαναφέρετέ το πρώτα.',
+  'Arrow keys move, plus and minus resize, Delete removes.': 'Τα πλήκτρα με τα βέλη μετακινούν, τα πλήκτρα συν και πλην αλλάζουν το μέγεθος και το Delete αφαιρεί.',
+  'Ask me': 'Να με ρωτάτε',
+  'Atelier': 'Atelier',
+  'Atelier - A Digital Closet': 'Atelier - Μία Ψηφιακή Ντουλάπα',
+  'Authorized JavaScript origins': 'Εξουσιοδοτημένες προελεύσεις JavaScript',
+  'Auto-backup to a file': 'Αυτόματο αντίγραφο ασφαλείας σε αρχείο',
+  'Auto-backup unlinked.': 'Η σύνδεση με το αυτόματο αντίγραφο ασφαλείας καταργήθηκε.',
+  'Automatic backup': 'Αυτόματο αντίγραφο ασφαλείας',
+  'Autumn': 'Φθινόπωρο',
+  'Back': 'Πίσω',
+  'Back to your closet': 'Επιστροφή στη ντουλάπα σας',
+  'Backup file linked — it stays up to date.': 'Το αρχείο αντιγράφου ασφαλείας συνδέθηκε — παραμένει πάντα ενημερωμένο.',
+  'Backup file reconnected.': 'Η σύνδεση με το αρχείο αντιγράφου ασφαλείας αποκαταστάθηκε.',
+  'Backup file updated.': 'Το αρχείο αντιγράφου ασφαλείας ενημερώθηκε.',
+  'Bottoms': 'Παντελόνια',
+  'Brand': 'Μάρκα',
+  'Brand A–Z': 'Μάρκα Α–Ω',
+  'Browse closet': 'Περιήγηση στη ντουλάπα',
+  'Camera': 'Κάμερα',
+  'Cancel': 'Ακύρωση',
+  'Canvas': 'Καμβάς',
+  'Canvas controls': 'Χειριστήρια Καμβά',
+  'Categories': 'Κατηγορίες',
+  'Category': 'Κατηγορία',
+  'Category *': 'Κατηγορία *',
+  'Change photo': 'Αλλαγή φωτογραφίας',
+  'Changes saved': 'Οι αλλαγές αποθηκεύτηκαν',
+  'Choose a color…': 'Επιλέξτε ένα χρώμα…',
+  'Choose clothing': 'Επιλογή ρούχων',
+  'Choose file…': 'Επιλογή αρχείου…',
+  'Choose pieces from the closet to start an outfit.': 'Επιλέξτε κομμάτια από τη ντουλάπα σας για να δημιουργήσετε ένα outfit.',
+  'City name': 'Όνομα πόλης',
+  'City name…': 'Όνομα πόλης…',
+  'Clear all': 'Εκκαθάριση όλων',
+  'Clear search and filters': 'Εκκαθάριση αναζήτησης και φίλτρων',
+  'Click to choose a file, drop an image here, or press': 'Κάντε κλικ για να επιλέξετε ένα αρχείο, σύρετε μια εικόνα εδώ ή πατήστε',
+  'Client ID cleared.': 'Το αναγνωριστικό πελάτη διαγράφηκε.',
+  'Client ID…': 'Αναγνωριστικό πελάτη…',
+  'Close': 'Κλείσιμο',
+  'Close forecast': 'Κλείσιμο πρόγνωσης',
+  'Closet': 'Ντουλάπα',
+  'Cloud sync': 'Συγχρονισμός στο cloud',
+  'Cmd': 'Cmd',
+  'Color': 'Χρώμα',
+  'Color match': 'Ταίριασμα χρωμάτων',
+  'Colors': 'Χρώματα',
+  'Combine pieces from your closet into your first look.': 'Συνδυάστε κομμάτια από τη ντουλάπα σας για να δημιουργήσετε το πρώτο σας outfit.',
+  'Confirm': 'Επιβεβαίωση',
+  'Connect Google Drive': 'Σύνδεση με το Google Drive',
+  'Continue editing': 'Συνέχεια επεξεργασίας',
+  'Continue to details': 'Συνέχεια στις λεπτομέρειες',
+  'Could not archive': 'Δεν ήταν δυνατή η αρχειοθέτηση',
+  'Could not create the sample closet': 'Δεν ήταν δυνατή η δημιουργία της δοκιμαστικής ντουλάπας',
+  'Could not crop that image': 'Δεν ήταν δυνατή η περικοπή αυτής της εικόνας',
+  'Could not delete': 'Δεν ήταν δυνατή η διαγραφή',
+  'Could not find that city.': 'Δεν ήταν δυνατή η εύρεση αυτής της πόλης.',
+  'Could not link the file.': 'Δεν ήταν δυνατή η σύνδεση του αρχείου.',
+  'Could not read that image.': 'Δεν ήταν δυνατή η ανάγνωση αυτής της εικόνας.',
+  'Could not read your closet': 'Δεν ήταν δυνατή η ανάγνωση της ντουλάπας σας',
+  'Could not remove': 'Δεν ήταν δυνατή η αφαίρεση',
+  'Could not save': 'Δεν ήταν δυνατή η αποθήκευση',
+  'Could not save outfit': 'Δεν ήταν δυνατή η αποθήκευση του outfit',
+  'Could not save — try Reconnect.': 'Δεν ήταν δυνατή η αποθήκευση — δοκιμάστε να συνδεθείτε ξανά.',
+  'Could not unarchive': 'Δεν ήταν δυνατή η επαναφορά από το αρχείο',
+  'Could not update favorite': 'Δεν ήταν δυνατή η ενημέρωση των αγαπημένων',
+  'Create your first outfit': 'Δημιουργήστε το πρώτο σας outfit',
+  'Created by': 'Δημιουργήθηκε από τον',
+  'Crop area': 'Περιοχή περικοπής',
+  'Crop frame': 'Πλαίσιο περικοπής',
+  'Crop photo': 'Περικοπή φωτογραφίας',
+  'Crop shape': 'Σχήμα περικοπής',
+  'Ctrl': 'Ctrl',
+  'Custom category name': 'Όνομα προσαρμοσμένης κατηγορίας',
+  'Delete': 'Διαγραφή',
+  'DELETE': 'ΔΙΑΓΡΑΦΗ',
+  'Delete all outfits': 'Διαγραφή όλων των συνόλων',
+  'Delete all outfits?': 'Να διαγραφούν όλα τα outfits;',
+  'Delete everything': 'Διαγραφή όλων',
+  'Delete everything on this device first, then load exactly what the backup contains.': 'Διαγράφει πρώτα όλα τα δεδομένα αυτής της συσκευής και, στη συνέχεια, φορτώνει ακριβώς όσα περιέχει το αντίγραφο ασφαλείας.',
+  'Delete everything?': 'Να διαγραφούν όλα;',
+  'Delete item?': 'Να διαγραφεί το είδος;',
+  'Delete outfit': 'Διαγραφή outfit',
+  'Delete outfit?': 'Να διαγραφεί το outfit;',
+  'Delete outfits': 'Διαγραφή outfit',
+  'Deselect': 'Αποεπιλογή',
+  'Details': 'Λεπτομέρειες',
+  'Dice mode': 'Λειτουργία ζαριών',
+  'Discard': 'Απόρριψη',
+  'Discard changes?': 'Να απορριφθούν οι αλλαγές;',
+  'Discard unsaved changes?': 'Να απορριφθούν οι μη αποθηκευμένες αλλαγές;',
+  'Disconnected from Google Drive.': 'Η σύνδεση με το Google Drive διακόπηκε.',
+  'Download PNG': 'Λήψη PNG',
+  'Dress me': 'Ντύσε με',
+  'Dress me tips': 'Συμβουλές για τη λειτουργία «Ντύσε με»',
+  'Duplicate': 'Δημιουργία αντιγράφου',
+  'Duplicate outfit': 'Δημιουργία αντιγράφου outfit',
+  'e.g. Alex': 'π.χ. Κώστας',
+  'Edit': 'Επεξεργασία',
+  'Edit item': 'Επεξεργασία είδους',
+  'Editor': 'Επεξεργαστής',
+  'Empty': 'Κενό',
+  'Every item in your closet is archived right now.': 'Όλα τα είδη της ντουλάπας σας είναι αυτήν τη στιγμή αρχειοθετημένα.',
+  'Every saved outfit will be removed. Your clothing items are kept.': 'Όλα τα αποθηκευμένα outfit θα αφαιρεθούν. Τα είδη ένδυσής σας θα διατηρηθούν.',
+  'Everything deleted': 'Όλα τα δεδομένα διαγράφηκαν',
+  'Everything is pinned. Unpin a row to roll it.': 'Όλα είναι καρφιτσωμένα. Ξεκαρφιτσώστε μια σειρά για να ρίξετε τα ζάρια.',
+  'Everything stays privately on this device.': 'Όλα τα δεδομένα παραμένουν ιδιωτικά σε αυτή τη συσκευή.',
+  'Explore a sample closet': 'Εξερευνήστε μια δοκιμαστική ντουλάπα',
+  'Explore sample closet': 'Εξερευνήστε τη δοκιμαστική ντουλάπα',
+  'Export': 'Εξαγωγή',
+  'Export backup': 'Εξαγωγή αντιγράφου ασφαλείας',
+  'Export failed': 'Η εξαγωγή απέτυχε',
+  'Export outfit as PNG': 'Εξαγωγή outfit ως PNG',
+  'Export PNG': 'Εξαγωγή PNG',
+  'Favorite': 'Αγαπημένο',
+  'Favorites only': 'Μόνο αγαπημένα',
+  'Filters': 'Φίλτρα',
+  'Find me on all platforms under the same name.': 'Θα με βρείτε σε όλες τις πλατφόρμες με το ίδιο όνομα.',
+  'Follow your device, or pick light or dark.': 'Ακολουθήστε τις ρυθμίσεις της συσκευής σας ή επιλέξτε ανοιχτόχρωμο ή σκοτεινό θέμα.',
+  'Forecast from Open-Meteo · no account needed': 'Πρόγνωση από το Open-Meteo · δεν απαιτείται λογαριασμός',
+  'Free': 'Ελεύθερο',
+  'Free-form styling board. Drag, resize and layer pieces, add accessories, and save your finished looks.': 'Ελεύθερος χώρος δημιουργίας outfit. Μετακινήστε, αλλάξτε μέγεθος και τοποθετήστε σε επίπεδα τα ρούχα σας, προσθέστε αξεσουάρ και αποθηκεύστε τα ολοκληρωμένα σύνολά σας.',
+  'Go to closet': 'Μετάβαση στη ντουλάπα',
+  'Google client ID': 'Αναγνωριστικό πελάτη Google',
+  'Google Drive': 'Google Drive',
+  'Google Drive connected.': 'Το Google Drive συνδέθηκε.',
+  'Help': 'Βοήθεια',
+  'Home': 'Αρχική',
+  'How do you want to put a look together?': 'Πώς θέλετε να δημιουργήσετε ένα Outfit?',
+  'How the dice picks pieces in Dress me.': 'Πώς τα ζάρια επιλέγουν κομμάτια στη λειτουργία «Ντύσε με».',
+  'How to get a Client ID': 'Πώς να αποκτήσετε ένα αναγνωριστικό πελάτη',
+  'Image source': 'Πηγή εικόνας',
+  'Image URL': 'URL εικόνας',
+  'Import backup': 'Εισαγωγή αντιγράφου ασφαλείας',
+  'Import failed': 'Η εισαγωγή απέτυχε',
+  'Import mode': 'Λειτουργία εισαγωγής',
+  'In Google Cloud Console, create a project, enable the “Google Drive API”, then create an OAuth client ID of type “Web application”. Under': 'Στην Κονσόλα Google Cloud, δημιουργήστε ένα έργο, ενεργοποιήστε το «Google Drive API» και, στη συνέχεια, δημιουργήστε ένα αναγνωριστικό πελάτη OAuth τύπου «Εφαρμογή ιστού». Στην ενότητα',
+  'Item added to your closet': 'Το είδος προστέθηκε στη ντουλάπα σας',
+  'Item archived': 'Το είδος αρχειοθετήθηκε',
+  'Item deleted': 'Το είδος διαγράφηκε',
+  'Item details': 'Λεπτομέρειες είδους',
+  'Item photo': 'Φωτογραφία είδους',
+  'Item restored': 'Το είδος επαναφέρθηκε',
+  'Items you archive will be kept here.': 'Τα είδη που αρχειοθετείτε θα αποθηκεύονται εδώ.',
+  'Keep it safe': 'Διατηρήστε τα ασφαλή',
+  'Keeps one backup file up to date automatically. On another device, open Atelier and use Import backup with that same file.': 'Διατηρεί αυτόματα ενημερωμένο ένα αρχείο αντιγράφου ασφαλείας. Σε άλλη συσκευή, ανοίξτε το Atelier και χρησιμοποιήστε την επιλογή «Εισαγωγή αντιγράφου ασφαλείας» με το ίδιο αρχείο.',
+  'Kept your current canvas outfit.': 'Το Outfit σας στον Καμβά διατηρήθηκε.',
+  'Landscape 5:4': 'Οριζόντιο 4:5',
+  'Load': 'Φόρτωση',
+  'Look': 'Outfit',
+  'Looked up with Open-Meteo for the forecast only.': 'Η αναζήτηση μέσω Open-Meteo χρησιμοποιείται αποκλειστικά για την πρόγνωση του καιρού.',
+  'Looks from both modes are kept in': 'Τα outfit και από τις δύο λειτουργίες αποθηκεύονται στην ενότητα',
+  'Mac': 'Mac',
+  'Main': 'Κύριο μενού',
+  'Main category': 'Κύρια κατηγορία',
+  'Main color': 'Κύριο χρώμα',
+  'Main mobile': 'Κύριο μενού για κινητά',
+  'Make background transparent': 'Αφαίρεση Φόντου',
+  'Mark all read': 'Σήμανση όλων ως αναγνωσμένων',
+  'Merge': 'Συγχώνευση',
+  'Missing item': 'Το είδος λείπει',
+  'Move left': 'Μετακίνηση αριστερά',
+  'Move up': 'Μετακίνηση προς τα πάνω',
+  'Move ↔': 'Μετακίνηση ↔',
+  'Move ↕': 'Μετακίνηση ↕',
+  'My Closet': 'Η ντουλάπα μου',
+  'My Outfits': 'Τα Outfits Μου',
+  'Name': 'Όνομα',
+  'Name *': 'Όνομα *',
+  'Name A–Z': 'Όνομα Α–Ω',
+  'Name cleared.': 'Το όνομα διαγράφηκε.',
+  'Name your outfit': 'Ονομάστε το outfit σας',
+  'New': 'Νέο',
+  'Newest added': 'Πιο πρόσφατα προστέθηκαν',
+  'No account. No tracking. Your photos and outfits never leave this device.': 'Χωρίς λογαριασμό. Χωρίς παρακολούθηση. Οι φωτογραφίες και τα σύνολά σας δεν φεύγουν ποτέ από αυτή τη συσκευή.',
+  'No archived items': 'Δεν υπάρχουν αρχειοθετημένα είδη',
+  'No image': 'Χωρίς εικόνα',
+  'No image yet': 'Δεν υπάρχει ακόμα εικόνα',
+  'No items match': 'Δεν βρέθηκαν αντίστοιχα είδη',
+  'No matching archived items': 'Δεν βρέθηκαν αντίστοιχα αρχειοθετημένα είδη',
+  'No matching city — try another name.': 'Δεν βρέθηκε αντίστοιχη πόλη — δοκιμάστε ένα διαφορετικό όνομα.',
+  'No notifications yet.': 'Δεν υπάρχουν ακόμα ειδοποιήσεις.',
+  'No photo yet': 'Δεν υπάρχει ακόμα φωτογραφία',
+  'No saved outfits yet': 'Δεν υπάρχουν ακόμα αποθηκευμένα outfits',
+  'Not enough tops or bottoms to build a combination yet.': 'Δεν υπάρχουν ακόμα αρκετές μπλούζες ή παντελόνια για να δημιουργηθεί ένας συνδυασμός.',
+  'Notes': 'Σημειώσεις',
+  'Nothing else in your closet to shuffle with the pinned items.': 'Δεν υπάρχουν άλλα είδη στη ντουλάπα σας για να συνδυαστούν με τα καρφιτσωμένα.',
+  'Nothing to arrange yet': 'Δεν υπάρχει ακόμα κάτι για τοποθέτηση',
+  'Nothing to dress yet': 'Δεν υπάρχουν ακόμα ρούχα για να δημιουργήσετε outfit',
+  'Nothing to filter by yet': 'Δεν υπάρχουν ακόμα διαθέσιμα φίλτρα',
+  'Nothing to roll yet.': 'Δεν υπάρχει ακόμα κάτι για να ρίξετε τα ζάρια.',
+  'Nothing to show': 'Δεν υπάρχει κάτι προς εμφάνιση',
+  'Notifications': 'Ειδοποιήσεις',
+  'Occasion': 'Περίσταση',
+  'Occasion, tags and notes': 'Περίσταση, ετικέτες και σημειώσεις',
+  'Oldest added': 'Πιο παλιά προστέθηκαν',
+  'Open Canvas': 'Άνοιξε τον Καμβά',
+  'Open Dress me': 'Άνοιξε το Ντύσε με',
+  'Open in canvas': 'Άνοιγμα στον καμβά',
+  'Opens in a new tab. Websites can\'t be shown inside the app, so you bring the image back with a screenshot.': 'Ανοίγει σε νέα καρτέλα. Οι ιστότοποι δεν μπορούν να εμφανιστούν μέσα στην εφαρμογή, επομένως μπορείτε να επιστρέψετε με την εικόνα χρησιμοποιώντας ένα στιγμιότυπο οθόνης.',
+  'Opens your camera on supported devices': 'Ανοίγει την κάμερα στις υποστηριζόμενες συσκευές',
+  'Original frame': 'Αρχικό πλαίσιο',
+  'Outfit Builder': 'Δημιουργία Outfit',
+  'Outfit canvas': 'Καμβάς outfit',
+  'Outfit deleted': 'Το outfit διαγράφηκε',
+  'Outfit duplicated': 'Το outfit αντιγράφηκε',
+  'Outfit name': 'Όνομα συνόλου',
+  'Outfit saved': 'Το outfit αποθηκεύτηκε',
+  'Outfits deleted': 'Τα outfits διαγράφηκαν',
+  'Paste a screenshot': 'Επικόλληση στιγμιότυπου οθόνης',
+  'Paste your Google OAuth Client ID to turn on sync.': 'Επικολλήστε το αναγνωριστικό πελάτη Google OAuth για να ενεργοποιήσετε τον συγχρονισμό.',
+  'Permission was not granted.': 'Δεν παραχωρήθηκε άδεια.',
+  'Phone: use your normal screenshot buttons, then upload it': 'Κινητό: χρησιμοποιήστε τον συνηθισμένο συνδυασμό πλήκτρων για στιγμιότυπο οθόνης και έπειτα μεταφορτώστε το.',
+  'Photo': 'Φωτογραφία',
+  'Photo ready': 'Η φωτογραφία είναι έτοιμη',
+  'Photos and data': 'Φωτογραφίες και δεδομένα',
+  'Pick at least one piece first.': 'Επιλέξτε πρώτα τουλάχιστον ένα κομμάτι.',
+  'Pick pieces from your closet, arrange them, and save the look.': 'Επιλέξτε κομμάτια από τη ντουλάπα σας, τοποθετήστε τα όπως θέλετε και αποθηκεύστε το outfit.',
+  'Pin: the dice skips this row': 'Καρφίτσωμα: τα ζάρια παραλείπουν αυτή τη σειρά',
+  'PNG exported': 'Η εξαγωγή PNG ολοκληρώθηκε',
+  'Portrait 4:5': 'Κατακόρυφο 4:5',
+  'Portrait crop': 'Κατακόρυφη περικοπή',
+  'Preferences reset': 'Οι προτιμήσεις επανήλθαν στις προεπιλεγμένες ρυθμίσεις',
+  'Protect my data': 'Προστασία των δεδομένων μου',
+  'Protected.': 'Προστατευμένα.',
+  'Purchase date': 'Ημερομηνία αγοράς',
+  'Purchase price': 'Τιμή αγοράς',
+  'Random': 'Τυχαίο',
+  'Randomly combine items from your closet. Pinned items stay.': 'Συνδυάστε τυχαία είδη από τη ντουλάπα σας. Τα καρφιτσωμένα είδη παραμένουν στη θέση τους.',
+  'Recently created': 'Πιο πρόσφατα',
+  'Recently modified': 'Τελευταία τροποποίηση',
+  'Reimagined.': 'Ανανεωμένη.',
+  'Remove': 'Αφαίρεση',
+  'Remove background': 'Αφαίρεση φόντου',
+  'Remove sample content': 'Αφαίρεση δοκιμαστικού περιεχομένου',
+  'Remove sample content?': 'Να αφαιρεθεί το δοκιμαστικό περιεχόμενο;',
+  'Removes all items, photos and outfits from this device. You can delete a single item from its card in the closet.': 'Αφαιρεί όλα τα είδη, τις φωτογραφίες και τα outfits από αυτή τη συσκευή. Μπορείτε να διαγράψετε μεμονωμένα είδη από την αντίστοιχη κάρτα τους στη ντουλάπα.',
+  'Replace': 'Αντικατάσταση',
+  'Replace image': 'Αντικατάσταση εικόνας',
+  'Reset': 'Επαναφορά',
+  'Reset edits': 'Επαναφορά αλλαγών',
+  'Reset layout': 'Επαναφορά διάταξης',
+  'Reset preferences': 'Επαναφορά προτιμήσεων',
+  'Restore this item to use it in outfits': 'Επαναφέρετε αυτό το είδος για να το χρησιμοποιήσετε σε outfits',
+  'Roll the dice': 'Ρίξε τα ζάρια',
+  'Rotate left': 'Περιστροφή αριστερά',
+  'Rotate right': 'Περιστροφή δεξιά',
+  'Sample': 'Δοκιμαστικό',
+  'Sample closet added. Remove it any time in Settings.': 'Η δοκιμαστική ντουλάπα προστέθηκε. Μπορείτε να την αφαιρέσετε ανά πάσα στιγμή από τις Ρυθμίσεις.',
+  'Sample content removed': 'Το δοκιμαστικό περιεχόμενο αφαιρέθηκε',
+  'Sample items are marked “Sample”.': 'Τα δοκιμαστικά είδη επισημαίνονται ως «Δοκιμαστικό».',
+  'Save': 'Αποθήκευση',
+  'Save this look': 'Αποθήκευση αυτού του outfit',
+  'Save to My Outfits': 'Αποθήκευση στα outfits μου',
+  'Saved': 'Αποθηκεύτηκε',
+  'Saved on this device': 'Αποθηκευμένα σε αυτή τη συσκευή',
+  'Saved to My Outfits': 'Αποθηκεύτηκε στα outfits μου',
+  'Search': 'Αναζήτηση',
+  'Search closet': 'Αναζήτηση στη ντουλάπα',
+  'Search closet…': 'Αναζήτηση στη ντουλάπα…',
+  'Search clothing': 'Αναζήτηση ρούχων',
+  'Search name, brand, color, tag…': 'Αναζήτηση με όνομα, μάρκα, χρώμα, ετικέτα…',
+  'Search outfits': 'Αναζήτηση Outfit',
+  'Search outfits…': 'Αναζήτηση Outfit…',
+  'Search site': 'Αναζήτηση σε ιστότοπο',
+  'Search the web': 'Αναζήτηση στον ιστό',
+  'Season': 'Εποχή',
+  'Select': 'Επιλογή',
+  'Selected item controls': 'Χειριστήρια επιλεγμένου είδους',
+  'Settings': 'Ρυθμίσεις',
+  'Shape': 'Σχήμα',
+  'Shift': 'Shift',
+  'Shoes': 'Παπούτσια',
+  'Show archived items': 'Εμφάνιση αρχειοθετημένων ειδών',
+  'Show the current weather and the next 3 days for your city at the top of the page.': 'Εμφάνιση του τρέχοντος καιρού και της πρόγνωσης για τις επόμενες 3 ημέρες στην πόλη σας, στο επάνω μέρος της σελίδας.',
+  'Show the two options each time, or jump straight into one.': 'Εμφάνιση των δύο επιλογών κάθε φορά ή απευθείας μετάβαση σε μία από αυτές.',
+  'Shown in the greeting at the top of the page.': 'Εμφανίζεται στον χαιρετισμό στο επάνω μέρος της σελίδας.',
+  'Shuffled. Some filters were relaxed to find enough items.': 'Το ανακάτεμα ολοκληρώθηκε. Ορισμένα φίλτρα χαλάρωσαν ώστε να βρεθούν αρκετά είδη.',
+  'Skip to content': 'Μετάβαση στο περιεχόμενο',
+  'Something went wrong': 'Κάτι πήγε στραβά',
+  'Sort': 'Ταξινόμηση',
+  'Sort outfits': 'Ταξινόμηση Outfit',
+  'Square': 'Τετράγωνο',
+  'Square crop': 'Τετράγωνη περικοπή',
+  'Start with an empty closet': 'Ξεκινήστε με μια άδεια ντουλάπα',
+  'Strength': 'Ένταση',
+  'Style tags': 'Ετικέτες στυλ',
+  'Subcategories': 'Υποκατηγορίες',
+  'Subcategory': 'Υποκατηγορία',
+  'Swipe through your tops, bottoms and shoes, pin favorites, and roll the dice for a random or color-matched look.': 'Περιηγηθείτε στις μπλούζες, τα παντελόνια και τα παπούτσια σας, καρφιτσώστε τα αγαπημένα σας και ρίξτε τα ζάρια για να δημιουργήσετε ένα τυχαίο outfit ή ένα outfit με ταιριαστά χρώματα.',
+  'Switch panel': 'Εναλλαγή πίνακα',
+  'Sync completed successfully.': 'Ο συγχρονισμός ολοκληρώθηκε με επιτυχία.',
+  'Sync failed': 'Ο συγχρονισμός απέτυχε',
+  'Sync with Google Drive': 'Συγχρονισμός με το Google Drive',
+  'Tags': 'Ετικέτες',
+  'Take a photo': 'Λήψη φωτογραφίας',
+  'Tap to change it, or continue below.': 'Πατήστε για να την αλλάξετε ή συνεχίστε παρακάτω.',
+  'That item is already in the outfit': 'Αυτό το είδος υπάρχει ήδη στο outfit',
+  'That item is no longer in your closet': 'Αυτό το είδος δεν βρίσκεται πλέον στη ντουλάπα σας',
+  'That item no longer exists': 'Αυτό το είδος δεν υπάρχει πλέον',
+  'That outfit no longer exists': 'Αυτό το outfit δεν υπάρχει πλέον',
+  'Theme': 'Θέμα',
+  'Theme, start mode and dice mode return to defaults. Your data is untouched.': 'Το θέμα, η λειτουργία εκκίνησης και η λειτουργία ζαριών επανέρχονται στις προεπιλεγμένες ρυθμίσεις. Τα δεδομένα σας δεν επηρεάζονται.',
+  'There is nothing to export yet.': 'Δεν υπάρχει ακόμα κάτι προς εξαγωγή.',
+  'This browser can’t link a file. Use Export backup above, or open Atelier in Chrome or Edge on a computer.': 'Αυτό το πρόγραμμα περιήγησης δεν μπορεί να συνδέσει ένα αρχείο. Χρησιμοποιήστε την παραπάνω επιλογή «Εξαγωγή αντιγράφου ασφαλείας» ή ανοίξτε το Atelier σε υπολογιστή μέσω Chrome ή Edge.',
+  'This deletes the sample items and sample outfits. Your own items and outfits stay.': 'Αυτή η ενέργεια διαγράφει τα δοκιμαστικά είδη και τα δοκιμαστικά σύνολα. Τα δικά σας είδη και σύνολα θα παραμείνουν.',
+  'This outfit has changes that haven’t been saved.': 'Αυτό το outfit περιέχει αλλαγές που δεν έχουν αποθηκευτεί.',
+  'Tip: “Remove background” works best on a plain, uniform background. Transparent PNGs are supported.': 'Συμβουλή: Η «Αφαίρεση φόντου» λειτουργεί καλύτερα σε απλό, ομοιόμορφο φόντο. Υποστηρίζονται επίσης διαφανείς εικόνες PNG.',
+  'Tolerance': 'Ανοχή',
+  'Tops': 'Μπλούζες',
+  'Transparent background': 'Διαφανές φόντο',
+  'Try a different search or clear your filters.': 'Δοκιμάστε μια διαφορετική αναζήτηση ή καταργήστε τα φίλτρα σας.',
+  'Try again': 'Δοκιμάστε ξανά',
+  'Type a tag and press Enter': 'Πληκτρολογήστε μια ετικέτα και πατήστε Enter',
+  'Unarchive selected': 'Επαναφορά επιλεγμένων',
+  'Unsaved changes': 'Μη αποθηκευμένες αλλαγές',
+  'Upload': 'Μεταφόρτωση',
+  'Upload a photo': 'Μεταφόρτωση φωτογραφίας',
+  'URL': 'URL',
+  'Use this crop': 'Χρήση αυτής της περικοπής',
+  'View archived items': 'Προβολή αρχειοθετημένων ειδών',
+  'We couldn\'t open your closet': 'Δεν ήταν δυνατό το άνοιγμα της ντουλάπας σας',
+  'Weather city': 'Πόλη για τον καιρό',
+  'Weather city cleared.': 'Η πόλη για τον καιρό διαγράφηκε.',
+  'Weather unavailable': 'Ο καιρός δεν είναι διαθέσιμος',
+  'Weather widget': 'Γραφικό στοιχείο καιρού',
+  'Weather widget is off.': 'Το γραφικό στοιχείο καιρού είναι ανενεργό.',
+  'Weather widget is on.': 'Το γραφικό στοιχείο καιρού είναι ενεργό.',
+  'Welcome to Atelier': 'Καλώς ήρθατε στο Atelier',
+  'When I open it': 'Κατά το άνοιγμα',
+  'Which city?': 'Σε ποια πόλη;',
+  'Win': 'Win',
+  'Windows': 'Windows',
+  'Winter': 'Χειμώνας',
+  'You can add one now or later.': 'Μπορείτε να προσθέσετε μία τώρα ή αργότερα.',
+  'You have an unsaved outfit waiting on the canvas.': 'Έχετε ένα μη αποθηκευμένο outfit στον Καμβά.',
+  'Your browser did not grant protection. Use backups to be safe.': 'Το πρόγραμμα περιήγησής σας δεν παραχώρησε άδεια προστασίας. Χρησιμοποιήστε αντίγραφα ασφαλείας για μεγαλύτερη ασφάλεια.',
+  'Your canvas is empty': 'Ο καμβάς σας είναι άδειος',
+  'Your Closet': 'Η ντουλάπα σας',
+  'Your closet is empty': 'Η ντουλάπα σας είναι άδεια',
+  'Your clothing items are kept.': 'Τα είδη ένδυσής σας διατηρούνται.',
+  'Your data is now protected.': 'Τα δεδομένα σας προστατεύονται πλέον.',
+  'Your digital closet lives in this browser. No account needed. How would you like to begin?': 'Η ψηφιακή σας ντουλάπα αποθηκεύεται στο πρόγραμμα περιήγησής σας. Δεν χρειάζεται λογαριασμός. Πώς θα θέλατε να ξεκινήσετε;',
+  'Your name': 'Το όνομά σας',
+  'Your name is saved.': 'Το όνομά σας αποθηκεύτηκε.',
+  'Your unsaved changes will be lost.': 'Οι αλλαγές που δεν έχουν αποθηκευτεί θα χαθούν.',
+  'Zoom': 'Μεγέθυνση',
+  '‹ Outfit modes': '‹ Λειτουργίες Outfit',
+  '‹ Settings': '‹ Ρυθμίσεις',
+  '← Back': '← Πίσω',
+  '↶ Undo': '↶ Αναίρεση',
+  '⟲ Left': '⟲ Αριστερά',
+  '⟲ Rotate': '⟲ Περιστροφή',
+  '⟳ Right': '⟳ Δεξιά',
+  '⟳ Rotate': '⟳ Περιστροφή',
+  '⤮ Shuffle': '⤮ Ανακάτεμα',
+  '＋ Custom…': '＋ Προσαρμοσμένη…',
+};
+
+const SENT = '\u0000';      // wraps runtime values so user data is never translated
+
+const norm = s => String(s).replace(/\s+/g, ' ').trim();
+
+// Dictionary hit, else the same text without its trailing punctuation ("Your Closet," is stored
+// as "Your Closet"), so markup elsewhere in the line can't hide a translation.
+function lookup(text) {
+  const key = norm(text);
+  if (Object.prototype.hasOwnProperty.call(EL, key)) return EL[key];
+  const m = /^(.*?)([,.:;!?…]+)$/.exec(key);
+  const stem = m && m[1].trim();
+  if (stem && Object.prototype.hasOwnProperty.call(EL, stem)) return EL[stem] + m[2];
+  return null;
+}
+
+export function lang() {
+  const v = db.settings.get('lang', 'en');
+  return LANGS.includes(v) ? v : 'en';
+}
+
+// Switching reloads: every view is built by JS, so a fresh start is the only way to be sure
+// that lists, dialogs and panels all come back in the new language.
+export function setLang(code) {
+  const v = LANGS.includes(code) ? code : 'en';
+  if (v === lang()) return;
+  db.settings.set('lang', v);
+  location.reload();
+}
+
+// One string in, one string out. Unknown text is returned unchanged.
+export function t(text) {
+  if (lang() === 'en' || text == null) return text;
+  return lookup(text) ?? text;
+}
+
+// Keeps the surrounding whitespace/indentation of an HTML text run.
+function subText(text) {
+  const m = /^(\s*)([\s\S]*?)(\s*)$/.exec(text);
+  const greek = lookup(m[2]);
+  return greek == null ? text : m[1] + greek + m[3];
+}
+
+const ATTR = /\b(placeholder|title|aria-label|alt)=("([^"]*)"|'([^']*)')/g;
+
+// Translates the readable parts of a block of HTML: text between tags and the few attributes
+// that hold prose. Class names, ids, data-* values and input values are left alone.
+export function translateHtml(html) {
+  if (lang() === 'en' || typeof html !== 'string' || !html) return html;
+  let out = html.includes('<')
+    ? html.split(/(<[^>]*>)/).map(part => (part.startsWith('<') ? part : subText(part))).join('')
+    : subText(html);
+  out = out.replace(ATTR, (m, name, whole, dq, sq) => {
+    const value = dq === undefined ? sq : dq;
+    const quote = dq === undefined ? "'" : '"';
+    return name + '=' + quote + subText(value) + quote;
+  });
+  return out;
+}
+
+// Tagged template: tr`<h1>My Closet</h1>` — the literal parts are translated, ${values} are not.
+export function tr(strings, ...vals) {
+  let html = strings[0];
+  if (lang() === 'en') {
+    for (let i = 0; i < vals.length; i++) html += String(vals[i] ?? '') + strings[i + 1];
+    return html;
+  }
+  for (let i = 0; i < vals.length; i++) html += SENT + i + SENT + strings[i + 1];
+  return translateHtml(html).replace(/\u0000(\d+)\u0000/g, (m, i) => String(vals[i] ?? ''));
+}
+
+// The static markup in index.html is translated once, before any view renders.
+export function applyStatic(root = document) {
+  const code = lang();
+  document.documentElement.lang = code;
+  if (code === 'en') return;
+  document.title = t(document.title);
+  const body = root.body || root;
+  const walker = document.createTreeWalker(body, NodeFilter.SHOW_TEXT);
+  const nodes = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach(node => {
+    const tag = node.parentElement && node.parentElement.tagName;
+    if (tag === 'SCRIPT' || tag === 'STYLE') return;
+    node.nodeValue = subText(node.nodeValue);
+  });
+  (root.querySelectorAll ? root.querySelectorAll('[placeholder],[title],[aria-label],[alt]') : []).forEach(el => {
+    ['placeholder', 'title', 'aria-label', 'alt'].forEach(a => {
+      const v = el.getAttribute(a);
+      if (v) el.setAttribute(a, subText(v));
+    });
+  });
+}
