@@ -1,13 +1,13 @@
-# OS / editor junk
+# junk
 desktop.ini
 Thumbs.db
 .DS_Store
 *.log
 
-# opencode transcripts imported for reference — local only, never committed
+# opencode transcripts
 opencode-export/
 
-# Node (if tooling is ever added)
+# Node
 node_modules/
 npm-debug.log*
 .env
