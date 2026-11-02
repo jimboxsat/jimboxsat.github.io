@@ -19,11 +19,20 @@
   <header class="topbar">
     <div class="brand"><img class="brand-mark" src="favicon.png" alt="" aria-hidden="true" width="32" height="32"><span class="brand-name">Atelier</span></div>
     <nav class="nav" aria-label="Main">
-      <button class="nav-btn" data-view="closet" aria-current="page">Closet</button>
-      <button class="nav-btn" data-view="outfits">Outfit Builder</button>
+      <button class="nav-btn" data-view="closet" aria-current="page" data-i18n="nav.closet">Closet</button>
+      <button class="nav-btn" data-view="outfits" data-i18n="nav.outfits">Outfit Builder</button>
     </nav>
     <div class="top-actions">
-      <button class="icon-btn settings-btn" id="settingsBtn" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg></button>
+      <div class="topnav" id="topNav">
+        <button class="icon-btn topnav-btn" id="notifBtn" type="button" aria-label="Notifications" aria-haspopup="dialog" aria-expanded="false" title="Notifications"><span class="topnav-dot" id="notifDot" hidden></span></button>
+        <button class="icon-btn topnav-btn" id="syncBtn" type="button" aria-label="Sync with Google Drive" title="Sync with Google Drive" aria-busy="false"></button>
+        <button class="topnav-account" id="accountBtn" type="button" aria-haspopup="dialog" aria-expanded="false" aria-label="Account menu" title="Account">
+          <span class="topnav-avatar" id="accountAvatar" aria-hidden="true"></span>
+          <span class="topnav-chevron" id="accountChevron" aria-hidden="true"></span>
+        </button>
+        <div class="topmenu" id="accountMenu" role="dialog" aria-label="Account" hidden></div>
+        <div class="topmenu notif-panel" id="notifMenu" role="dialog" aria-label="Notifications" hidden></div>
+      </div>
     </div>
   </header>
   <main id="main">
@@ -32,8 +41,8 @@
     <section id="view-settings" class="view" hidden></section>
   </main>
   <nav class="bottom-nav" aria-label="Main mobile">
-    <button class="nav-btn" data-view="closet" aria-current="page">Closet</button>
-    <button class="nav-btn" data-view="outfits">Outfit Builder</button>
+    <button class="nav-btn" data-view="closet" aria-current="page" data-i18n="nav.closet">Closet</button>
+    <button class="nav-btn" data-view="outfits" data-i18n="nav.outfits">Outfit Builder</button>
   </nav>
 </div>
 <div id="modalRoot"></div>

@@ -5,13 +5,13 @@ import { createOutfitBuilder } from './outfit-builder.js';
 import { createDressMe } from './dress-me.js';
 import { createSettings, initAppearance } from './settings.js';
 import { loadDemoContent } from './demo.js';
+import { createTopMenu } from './topmenu.js';
 
 initAppearance();
 db.requestPersistence();   // ask the browser to keep photos and outfits between launches
 
 const views = { closet: $('#view-closet'), outfits: $('#view-outfits'), settings: $('#view-settings') };
-const settingsBtn = $('#settingsBtn');
-let current = 'closet', obMode = 'chooser';
+let current = 'closet', obMode = 'chooser', topMenu = null;
 
 // ---------- Outfit Builder shell: chooser + two modes ----------
 const mini = {
@@ -63,7 +63,8 @@ function showView(name) {
     const on = b.dataset.view === name;
     on ? b.setAttribute('aria-current', 'page') : b.removeAttribute('aria-current');
   });
-  settingsBtn.setAttribute('aria-pressed', name === 'settings' ? 'true' : 'false');
+  document.body.dataset.view = name;
+  if (topMenu) topMenu.close();
   if (name === 'outfits' && obMode === 'dress') requestAnimationFrame(() => dress.recenter());
   if (name === 'settings') settingsPage.refresh();
   window.scrollTo({ top: 0 });
@@ -79,6 +80,17 @@ async function removeDemo() {
 }
 
 const settingsPage = createSettings(views.settings, { onRemoveDemo: removeDemo });
+
+// Top-right navigation: notifications, Google Drive sync and the account menu (hidden on Settings).
+topMenu = createTopMenu({
+  onSettings: () => showView('settings'),
+  onConnectDrive: () => {
+    showView('settings');   // the app's existing Drive connection flow lives in Settings
+    toast('Add your Google client ID in Settings to turn on Google Drive sync.', 'info');
+  }
+});
+document.body.dataset.view = current;
+
 const closet = createCloset(views.closet, {
   onAddToOutfit: id => { showView('outfits'); setMode('canvas'); builder.addItem(id); },
   onLoadDemo: loadDemo, onRemoveDemo: removeDemo,
@@ -97,7 +109,6 @@ function openBuilder() {
   setMode(pref === 'dress' || pref === 'canvas' ? pref : 'chooser');
 }
 $$('.nav-btn').forEach(b => b.onclick = () => (b.dataset.view === 'outfits' ? openBuilder() : showView(b.dataset.view)));
-settingsBtn.onclick = () => showView('settings');
 views.outfits.addEventListener('goto-closet', () => showView('closet'));
 
 // ---------- first launch ----------

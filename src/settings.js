@@ -21,6 +21,8 @@ export function initAppearance() {
   applyTheme();
   if (mq && mq.addEventListener) mq.addEventListener('change', applyTheme);
 }
+// Used by the top-right theme switch so both places share one preference.
+export function setTheme(t) { prefs.set('theme', t); applyTheme(); }
 
 const fmtBytes = n => n == null ? '—' : n < 1048576 ? Math.max(1, Math.round(n / 1024)) + ' KB' : (n / 1048576).toFixed(n < 10485760 ? 1 : 0) + ' MB';
 
