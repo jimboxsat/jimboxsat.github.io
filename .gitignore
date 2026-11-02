@@ -4,6 +4,9 @@ Thumbs.db
 .DS_Store
 *.log
 
+# opencode transcripts imported for reference — local only, never committed
+opencode-export/
+
 # Node (if tooling is ever added)
 node_modules/
 npm-debug.log*
