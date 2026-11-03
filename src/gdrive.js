@@ -111,9 +111,12 @@ function mergeById(local, remote) {
 }
 
 function mergeProfile(local, remote) {
-  if (!local || !local.nickname) return remote || local || null;
-  if (!remote || !remote.nickname) return local;
-  return (local.updatedAt || 0) >= (remote.updatedAt || 0) ? local : remote;
+  if (!local) return remote || null;
+  if (!remote) return local;
+  const newer = (local.updatedAt || 0) >= (remote.updatedAt || 0) ? local : remote;
+  const older = newer === local ? remote : local;
+  // Backups created before photos existed must not erase a photo on another device.
+  return typeof newer.photo === 'string' ? newer : { ...newer, photo: older.photo || '' };
 }
 
 // Merge this device with the copy in Drive, upload the union, and apply it here. Last change per item wins.

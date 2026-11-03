@@ -44,7 +44,7 @@ export async function parseBackupText(text) {
     outfits.push(c);
   }
   const profile = data.profile && typeof data.profile === 'object'
-    ? { nickname: typeof data.profile.nickname === 'string' ? data.profile.nickname : '', updatedAt: Number(data.profile.updatedAt) || 0 }
+    ? { nickname: typeof data.profile.nickname === 'string' ? data.profile.nickname : '', ...(typeof data.profile.photo === 'string' && /^data:image\/(jpeg|png|webp);base64,/i.test(data.profile.photo) ? { photo: data.profile.photo } : data.profile.photo === '' ? { photo: '' } : {}), updatedAt: Number(data.profile.updatedAt) || 0 }
     : null;
   return { items, outfits, profile };
 }
@@ -56,7 +56,7 @@ export async function importBackup(file, { mode = 'merge' } = {}) {
     await db.bulkPut(items, outfits);
     if (profile) {
       const cur = db.getProfile();
-      if (!cur.nickname || (profile.updatedAt || 0) >= (cur.updatedAt || 0)) db.setProfile(profile);
+      if ((!cur.nickname && !cur.photo && !cur.updatedAt) || (profile.updatedAt || 0) >= (cur.updatedAt || 0)) db.setProfile(profile);
     }
   }
   return { items: items.length, outfits: outfits.length, mode };

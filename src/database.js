@@ -148,15 +148,16 @@ export const settings = {
   set(k, v) { try { localStorage.setItem('atelier:' + k, JSON.stringify(v)); } catch { /* ignore */ } }
 };
 
-// ---- Profile: the nickname used in greetings. Synced with backups by updatedAt.
+// ---- Profile, synced with backups by updatedAt.
 export function getProfile() {
   const p = settings.get('profile', null);
   return (p && typeof p === 'object')
-    ? { nickname: typeof p.nickname === 'string' ? p.nickname : '', updatedAt: Number(p.updatedAt) || 0 }
-    : { nickname: '', updatedAt: 0 };
+    ? { nickname: typeof p.nickname === 'string' ? p.nickname : '', photo: typeof p.photo === 'string' && /^data:image\/(jpeg|png|webp);base64,/i.test(p.photo) ? p.photo : '', updatedAt: Number(p.updatedAt) || 0 }
+    : { nickname: '', photo: '', updatedAt: 0 };
 }
 export function setProfile(profile = {}) {
   const nickname = typeof profile.nickname === 'string' ? profile.nickname : '';
-  settings.set('profile', { nickname, updatedAt: Number(profile.updatedAt) || Date.now() });
+  const photo = typeof profile.photo === 'string' ? profile.photo : getProfile().photo;
+  localStorage.setItem('atelier:profile', JSON.stringify({ nickname, photo, updatedAt: Number(profile.updatedAt) || Date.now() }));
   emit('profile');
 }

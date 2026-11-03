@@ -17,6 +17,31 @@ const LEGACY = {
 };
 const THEME_LABEL = { light: 'Light theme', system: 'System theme', dark: 'Dark theme' };
 
+function avatarHtml(profile) {
+  const ch = (profile.nickname || '').trim().charAt(0).toUpperCase();
+  return profile.photo ? `<img src="${esc(profile.photo)}" alt="">` : ch ? esc(ch) : icons.user;
+}
+
+function prepareProfilePhoto(file) {
+  return new Promise((resolve, reject) => {
+    if (!file.type.startsWith('image/')) { reject(new Error('Please choose an image file.')); return; }
+    const url = URL.createObjectURL(file), image = new Image();
+    image.onload = () => {
+      URL.revokeObjectURL(url);
+      try {
+        const size = Math.min(image.naturalWidth, image.naturalHeight);
+        if (!size) throw new Error('Could not read that image.');
+        const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 256;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(image, (image.naturalWidth - size) / 2, (image.naturalHeight - size) / 2, size, size, 0, 0, 256, 256);
+        resolve(canvas.toDataURL('image/jpeg', 0.85));
+      } catch (err) { reject(err); }
+    };
+    image.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Could not read that image.')); };
+    image.src = url;
+  });
+}
+
 export function createTopMenu({ onSettings, onConnectDrive } = {}) {
   const root = $('#topNav');
   if (!root) return { close() { }, refresh() { } };
@@ -31,13 +56,11 @@ export function createTopMenu({ onSettings, onConnectDrive } = {}) {
 
   let open = null;   // 'account' | 'notif' | null
 
-  const initial = () => (db.getProfile().nickname || '').trim().charAt(0).toUpperCase();
-
   // ---------- avatars & labels ----------
   function renderAvatar() {
-    const ch = initial();
-    avatar.classList.toggle('empty', !ch);
-    avatar.innerHTML = ch ? esc(ch) : icons.user;
+    const profile = db.getProfile();
+    avatar.classList.toggle('empty', !profile.photo && !profile.nickname.trim());
+    avatar.innerHTML = avatarHtml(profile);
   }
 
   function updateIndicators() {
@@ -89,13 +112,13 @@ export function createTopMenu({ onSettings, onConnectDrive } = {}) {
   // ---------- account dropdown ----------
   function renderAccount() {
     const theme = db.settings.get('theme', 'system');
-    const ch = initial();
+    const profile = db.getProfile();
     const seg = [['light', 'sun'], ['system', 'monitor'], ['dark', 'moon']].map(([v, ico]) =>
       `<button type="button" data-theme-set="${v}" aria-pressed="${theme === v}" aria-label="${esc(t(THEME_LABEL[v]))}" title="${esc(t(THEME_LABEL[v]))}">${icons[ico]}</button>`).join('');
     accountMenu.innerHTML = `
       <button class="tm-row" data-act="profile">
         <span>${esc(t('View Profile'))}</span>
-        <span class="tm-avatar-sm" aria-hidden="true">${ch ? esc(ch) : icons.user}</span>
+        <span class="tm-avatar-sm" aria-hidden="true">${avatarHtml(profile)}</span>
       </button>
       <button class="tm-row" data-act="settings">
         <span>${esc(t('Settings'))}</span>${icons.gear}
@@ -156,24 +179,41 @@ export function createTopMenu({ onSettings, onConnectDrive } = {}) {
 
   // ---------- profile dialog (the app has no separate profile page) ----------
   async function openProfile() {
-    const name = (db.getProfile().nickname || '').trim();
+    const profile = db.getProfile(), name = profile.nickname.trim();
+    let photo = profile.photo, photoRequest = 0, processing = false;
     let items = [], outfits = [];
     try { [items, outfits] = await Promise.all([db.getItems(), db.getOutfits()]); } catch (e) { console.error(e); }
     const m = openModal({
       title: t('Profile'), className: 'small',
       body: tr`<div class="pf-head">
-          <span class="pf-avatar" aria-hidden="true">${name ? esc(name.charAt(0).toUpperCase()) : icons.user}</span>
+          <span class="pf-avatar" aria-hidden="true">${avatarHtml(profile)}</span>
           <div><p class="pf-name">${esc(name || t('No name yet'))}</p>
           <p class="muted small">${esc(tf('{items} items · {outfits} outfits', { items: items.length, outfits: outfits.length }))}</p></div>
         </div>
+        <div class="pf-photo-actions"><button type="button" class="btn" data-upload-photo>${esc(t('Upload profile picture'))}</button><input id="pfPhoto" type="file" accept="image/*" hidden><button type="button" class="btn ghost" data-remove-photo ${photo ? '' : 'hidden'}>${esc(t('Remove picture'))}</button></div>
         <label class="field"><span>${esc(t('Your name'))}</span><input id="pfName" maxlength="30" value="${esc(name)}" placeholder="e.g. Alex" autocomplete="nickname"></label>
         <p class="muted small">${esc(t('Used for the greeting on your home page. Everything stays on this device.'))}</p>
         <div class="form-actions"><button class="btn primary" data-save autofocus>${esc(t('Save'))}</button></div>`
     });
-    $('[data-save]', m.el).onclick = () => {
-      db.setProfile({ nickname: $('#pfName', m.el).value.trim() });
-      toast(t('Profile saved.'), 'success');
-      m.close(true);
+    const save = $('[data-save]', m.el), remove = $('[data-remove-photo]', m.el), input = $('#pfPhoto', m.el);
+    $('[data-upload-photo]', m.el).onclick = () => input.click();
+    const preview = () => { $('.pf-avatar', m.el).innerHTML = avatarHtml({ nickname: $('#pfName', m.el).value, photo }); remove.hidden = !photo; };
+    $('#pfName', m.el).addEventListener('input', preview);
+    input.addEventListener('change', async () => {
+      const file = input.files[0]; if (!file) return;
+      const request = ++photoRequest; processing = true; save.disabled = true;
+      try { const result = await prepareProfilePhoto(file); if (request === photoRequest) { photo = result; preview(); } }
+      catch (err) { if (request === photoRequest) toast(t(err.message || 'Could not read that image.'), 'error'); }
+      finally { if (request === photoRequest) { processing = false; save.disabled = false; input.value = ''; } }
+    });
+    remove.onclick = () => { photoRequest++; processing = false; save.disabled = false; input.value = ''; photo = ''; preview(); };
+    save.onclick = () => {
+      if (processing) return;
+      try {
+        db.setProfile({ nickname: $('#pfName', m.el).value.trim(), photo });
+        toast(t('Profile saved.'), 'success');
+        m.close(true);
+      } catch { toast(t('Could not save profile. Check your device storage.'), 'error'); }
     };
   }
 
