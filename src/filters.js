@@ -45,6 +45,7 @@ const mainColorRank = it => { const i = COLOR_NAMES.indexOf((it.colors && it.col
 function compareSort(a, b, sort) {
   if (sort === 'oldest') return a.createdAt - b.createdAt;
   if (sort === 'name') return a.name.localeCompare(b.name);
+  if (sort === 'name-desc') return b.name.localeCompare(a.name);
   if (sort === 'brand') {
     const ab = (a.brand || '').trim().toLowerCase(), bb = (b.brand || '').trim().toLowerCase();
     if (!ab !== !bb) return ab ? -1 : 1;          // branded pieces first, unbranded last
@@ -97,6 +98,7 @@ export function openFilterPanel(filters, items, onApply, opts = {}) {
         <option value="newest" ${draft.sort === 'newest' ? 'selected' : ''}>Newest added</option>
         <option value="oldest" ${draft.sort === 'oldest' ? 'selected' : ''}>Oldest added</option>
         <option value="name" ${draft.sort === 'name' ? 'selected' : ''}>Name A–Z</option>
+        ${opts.nameDescending ? `<option value="name-desc" ${draft.sort === 'name-desc' ? 'selected' : ''}>${esc(t('Name Z–A'))}</option>` : ''}
         <option value="brand" ${draft.sort === 'brand' ? 'selected' : ''}>Brand A–Z</option>
         <option value="color" ${draft.sort === 'color' ? 'selected' : ''}>Main color</option></select></label>
       <div class="form-actions sticky">

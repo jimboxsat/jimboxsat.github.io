@@ -7,6 +7,12 @@ export const LANGS = ['en', 'el'];
 export const LANG_LABEL = { en: 'EN', el: 'EL' };
 
 const EL = {
+  'Clothing order': 'Σειρά ρούχων',
+  'Choose how clothes are sorted in Dress me.': 'Επιλέξτε πώς ταξινομούνται τα ρούχα στο «Ντύσε με».',
+  'Newest first': 'Νεότερα πρώτα',
+  'Oldest first': 'Παλαιότερα πρώτα',
+  'Name Z–A': 'Όνομα Ω–Α',
+  'Clothing order saved.': 'Η σειρά των ρούχων αποθηκεύτηκε.',
   '+ New outfit': '+ Νέο σύνολο',
   '1. Find the item': '1. Βρείτε το είδος',
   '2. Take a screenshot': '2. Τραβήξτε ένα στιγμιότυπο οθόνης',

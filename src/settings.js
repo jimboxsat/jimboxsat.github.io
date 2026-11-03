@@ -8,7 +8,8 @@ import { t, tr, tf, translateHtml, lang } from './i18n.js';
 
 const prefs = db.settings;
 const VERSION = 'alpha 0.4.0';
-const PREF_KEYS = ['theme', 'startMode', 'dressMode', 'searchEngine'];
+const PREF_KEYS = ['theme', 'startMode', 'dressMode', 'dressSort', 'searchEngine'];
+const DRESS_SORTS = [['newest', 'Newest first'], ['oldest', 'Oldest first'], ['name', 'Name A–Z'], ['name-desc', 'Name Z–A'], ['brand', 'Brand A–Z'], ['color', 'Main color']];
 
 // ---- Appearance: 'system' follows the device; the CSS only needs data-theme="dark" | "light"
 const mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
@@ -57,6 +58,7 @@ export function createSettings(root, { onRemoveDemo, onBack } = {}) {
     try { [items, outfits] = await Promise.all([db.getItems(), db.getOutfits()]); } catch (e) { console.error(e); }
     try { info = await db.storageInfo(); } catch { /* unsupported */ }
     const theme = prefs.get('theme', 'system'), startMode = prefs.get('startMode', 'ask'), dice = prefs.get('dressMode', 'random') === 'color' ? 'color' : 'random';
+    const dressSort = prefs.get('dressSort', 'newest');
     const nickname = db.getProfile().nickname;
     const weatherOn = weather.enabled(), weatherCity = weather.city();
     const hasDemo = items.some(i => i.demo) || outfits.some(o => o.demo);
@@ -101,6 +103,10 @@ export function createSettings(root, { onRemoveDemo, onBack } = {}) {
       <section class="s-card">${sTitle(sIco(icons.shirt, icons.sparkle, 'tr'), t('Outfit Builder'))}
         ${row(t('When I open it'), t('Show the two options each time, or jump straight into one.'), radios('startMode', startMode, [['ask', t('Ask me')], ['dress', t('Dress me')], ['canvas', t('Canvas')]]))}
         ${row(t('Dice mode'), t('How the dice picks pieces in Dress me.'), radios('dressMode', dice, [['random', t('Random')], ['color', t('Color match')]]))}
+      </section>
+
+      <section class="s-card">${sTitle(sIco(icons.shirt), t('Dress me'))}
+        ${row(t('Clothing order'), t('Choose how clothes are sorted in Dress me.'), `<select id="dressSort" aria-label="${esc(t('Clothing order'))}">${DRESS_SORTS.map(([value, label]) => `<option value="${value}" ${value === dressSort ? 'selected' : ''}>${esc(t(label))}</option>`).join('')}</select>`)}
       </section>
 
       <section class="s-card">${sTitle(sIco(icons.database), t('Photos and data'))}
@@ -249,6 +255,10 @@ export function createSettings(root, { onRemoveDemo, onBack } = {}) {
 
   root.addEventListener('change', async e => {
     const el = e.target;
+    if (el.id === 'dressSort') {
+      if (DRESS_SORTS.some(([value]) => value === el.value)) { prefs.set('dressSort', el.value); toast(t('Clothing order saved.'), 'success'); }
+      return;
+    }
     if (el.type === 'radio') {
       prefs.set(el.name, el.value);
       if (el.name === 'theme') applyTheme();

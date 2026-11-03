@@ -44,6 +44,7 @@ const rand = n => Math.floor(Math.random() * n);
 
 export function createDressMe(root, { onOpenInCanvas }) {
   const filters = newFilters();
+  let lastSortPreference;
   let items = [];
   const pool = { top: [], bottom: [], shoes: [] };
   const sel = { top: undefined, bottom: undefined, shoes: undefined };   // undefined = not chosen yet
@@ -77,6 +78,8 @@ export function createDressMe(root, { onOpenInCanvas }) {
   renderWxChip();
 
   async function load() {
+    const preference = db.settings.get('dressSort', 'newest');
+    if (preference !== lastSortPreference) { filters.sort = preference; lastSortPreference = preference; }
     try { items = await db.getItems(); } catch (e) { console.error(e); items = []; }
     const live = applyFilters(items, { ...filters, category: 'All', subcategory: '', q: '', archived: false });
     for (const r of ROWS) pool[r.role] = live.filter(i => layoutRole(i) === r.role);
@@ -301,7 +304,7 @@ export function createDressMe(root, { onOpenInCanvas }) {
     if (dm) { db.settings.set('dressMode', dm.dataset.dm); paint(); return; }
     if (e.target.closest('[data-dice]')) return roll();
     if (e.target.closest('[data-save]')) return saveDialog();
-    if (e.target.closest('[data-filter]')) return openFilterPanel(filters, items.filter(i => !i.archived), load, { hideCategory: true });
+    if (e.target.closest('[data-filter]')) return openFilterPanel(filters, items.filter(i => !i.archived), load, { hideCategory: true, nameDescending: true });
     if (e.target.closest('[data-canvas]')) {
       const ids = selected().map(i => i.id);
       if (!ids.length) return toast(t('Pick at least one piece first.'), 'error');
