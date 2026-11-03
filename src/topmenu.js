@@ -186,18 +186,18 @@ export function createTopMenu({ onSettings, onConnectDrive } = {}) {
     const m = openModal({
       title: t('Profile'), className: 'small',
       body: tr`<div class="pf-head">
-          <span class="pf-avatar" aria-hidden="true">${avatarHtml(profile)}</span>
+          <button type="button" class="pf-avatar pf-avatar-upload" data-upload-photo aria-label="${esc(t('Upload profile picture'))}" title="${esc(t('Upload profile picture'))}"><span class="pf-avatar-image" aria-hidden="true">${avatarHtml(profile)}</span><span class="pf-avatar-overlay" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7h3l2-2h6l2 2h3v12H4z"/><circle cx="12" cy="13" r="3.5"/></svg></span></button>
           <div><p class="pf-name">${esc(name || t('No name yet'))}</p>
           <p class="muted small">${esc(tf('{items} items · {outfits} outfits', { items: items.length, outfits: outfits.length }))}</p></div>
         </div>
-        <div class="pf-photo-actions"><button type="button" class="btn" data-upload-photo>${esc(t('Upload profile picture'))}</button><input id="pfPhoto" type="file" accept="image/*" hidden><button type="button" class="btn ghost" data-remove-photo ${photo ? '' : 'hidden'}>${esc(t('Remove picture'))}</button></div>
+        <div class="pf-photo-actions"><input id="pfPhoto" type="file" accept="image/*" hidden><button type="button" class="btn ghost" data-remove-photo ${photo ? '' : 'hidden'}>${esc(t('Remove picture'))}</button></div>
         <label class="field"><span>${esc(t('Your name'))}</span><input id="pfName" maxlength="30" value="${esc(name)}" placeholder="e.g. Alex" autocomplete="nickname"></label>
         <p class="muted small">${esc(t('Used for the greeting on your home page. Everything stays on this device.'))}</p>
         <div class="form-actions"><button class="btn primary" data-save autofocus>${esc(t('Save'))}</button></div>`
     });
     const save = $('[data-save]', m.el), remove = $('[data-remove-photo]', m.el), input = $('#pfPhoto', m.el);
     $('[data-upload-photo]', m.el).onclick = () => input.click();
-    const preview = () => { $('.pf-avatar', m.el).innerHTML = avatarHtml({ nickname: $('#pfName', m.el).value, photo }); remove.hidden = !photo; };
+    const preview = () => { $('.pf-avatar-image', m.el).innerHTML = avatarHtml({ nickname: $('#pfName', m.el).value, photo }); remove.hidden = !photo; };
     $('#pfName', m.el).addEventListener('input', preview);
     input.addEventListener('change', async () => {
       const file = input.files[0]; if (!file) return;
