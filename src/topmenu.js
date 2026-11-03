@@ -19,7 +19,7 @@ const THEME_LABEL = { light: 'Light theme', system: 'System theme', dark: 'Dark 
 
 function avatarHtml(profile) {
   const ch = (profile.nickname || '').trim().charAt(0).toUpperCase();
-  return profile.photo ? `<img src="${esc(profile.photo)}" alt="">` : ch ? esc(ch) : icons.user;
+  return profile.photo ? `<img src="${esc(profile.photo)}" alt="">` : ch ? esc(ch) : '?';
 }
 
 function prepareProfilePhoto(file) {
@@ -59,7 +59,6 @@ export function createTopMenu({ onSettings, onConnectDrive } = {}) {
   // ---------- avatars & labels ----------
   function renderAvatar() {
     const profile = db.getProfile();
-    avatar.classList.toggle('empty', !profile.photo && !profile.nickname.trim());
     avatar.innerHTML = avatarHtml(profile);
   }
 
