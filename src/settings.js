@@ -4,7 +4,7 @@ import { exportBackup, importBackup } from './backup.js';
 import * as auto from './autobackup.js';
 import * as gdrive from './gdrive.js';
 import * as weather from './weather.js';
-import { t, tr, tf, translateHtml, lang } from './i18n.js';
+import { t, tr, tf, translateHtml, lang, setLang, LANGS, LANG_LABEL } from './i18n.js';
 
 const prefs = db.settings;
 const VERSION = 'alpha 0.4.0';
@@ -92,6 +92,7 @@ export function createSettings(root, { onRemoveDemo, onBack } = {}) {
 
       <section class="s-card">${sTitle(sIco(icons.palette), t('Appearance'))}
         ${row(t('Theme'), t('Follow your device, or pick light or dark.'), radios('theme', theme, [['system', 'System'], ['light', 'Light'], ['dark', 'Dark']]))}
+        ${row(t('Language'), '', `<select id="settingsLang" aria-label="${esc(t('Language'))}">${LANGS.map(code => `<option value="${code}" ${code === lang() ? 'selected' : ''}>${LANG_LABEL[code]}</option>`).join('')}</select>`)}
       </section>
 
       <section class="s-card">${sTitle(sIco(icons.user), t('Home'))}
@@ -103,9 +104,6 @@ export function createSettings(root, { onRemoveDemo, onBack } = {}) {
       <section class="s-card">${sTitle(sIco(icons.shirt, icons.sparkle, 'tr'), t('Outfit Builder'))}
         ${row(t('When I open it'), t('Show the two options each time, or jump straight into one.'), radios('startMode', startMode, [['ask', t('Ask me')], ['dress', t('Dress me')], ['canvas', t('Canvas')]]))}
         ${row(t('Dice mode'), t('How the dice picks pieces in Dress me.'), radios('dressMode', dice, [['random', t('Random')], ['color', t('Color match')]]))}
-      </section>
-
-      <section class="s-card">${sTitle(sIco(icons.shirt), t('Dress me'))}
         ${row(t('Clothing order'), t('Choose how clothes are sorted in Dress me.'), `<select id="dressSort" aria-label="${esc(t('Clothing order'))}">${DRESS_SORTS.map(([value, label]) => `<option value="${value}" ${value === dressSort ? 'selected' : ''}>${esc(t(label))}</option>`).join('')}</select>`)}
       </section>
 
@@ -255,6 +253,7 @@ export function createSettings(root, { onRemoveDemo, onBack } = {}) {
 
   root.addEventListener('change', async e => {
     const el = e.target;
+    if (el.id === 'settingsLang') { setLang(el.value); return; }
     if (el.id === 'dressSort') {
       if (DRESS_SORTS.some(([value]) => value === el.value)) { prefs.set('dressSort', el.value); toast(t('Clothing order saved.'), 'success'); }
       return;
