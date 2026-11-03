@@ -189,8 +189,9 @@ export function createTopMenu({ onSettings, onConnectDrive } = {}) {
           <button type="button" class="pf-avatar pf-avatar-upload" data-upload-photo aria-label="${esc(t('Upload profile picture'))}" title="${esc(t('Upload profile picture'))}"><span class="pf-avatar-image" aria-hidden="true">${avatarHtml(profile)}</span><span class="pf-avatar-overlay" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 7h3l2-2h6l2 2h3v12H4z"/><circle cx="12" cy="13" r="3.5"/></svg></span></button>
           <div><p class="pf-name">${esc(name || t('No name yet'))}</p>
           <p class="muted small">${esc(tf('{items} items · {outfits} outfits', { items: items.length, outfits: outfits.length }))}</p></div>
+          <button type="button" class="btn ghost pf-remove-photo" data-remove-photo ${photo ? '' : 'hidden'}>${esc(t('Remove picture'))}</button>
         </div>
-        <div class="pf-photo-actions"><input id="pfPhoto" type="file" accept="image/*" hidden><button type="button" class="btn ghost" data-remove-photo ${photo ? '' : 'hidden'}>${esc(t('Remove picture'))}</button></div>
+        <input id="pfPhoto" type="file" accept="image/*" hidden>
         <label class="field"><span>${esc(t('Your name'))}</span><input id="pfName" maxlength="30" value="${esc(name)}" placeholder="e.g. Alex" autocomplete="nickname"></label>
         <p class="muted small">${esc(t('Used for the greeting on your home page. Everything stays on this device.'))}</p>
         <div class="form-actions"><button class="btn primary" data-save autofocus>${esc(t('Save'))}</button></div>`

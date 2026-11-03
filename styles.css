@@ -665,6 +665,7 @@ button.tm-row { cursor: pointer; }
 
 /* profile dialog */
 .pf-head { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.pf-head > div { min-width: 0; overflow-wrap: anywhere; }
 .pf-avatar { width: 52px; height: 52px; border-radius: 50%; background: var(--text); color: var(--text-ink); display: grid; place-items: center; font-size: 20px; font-weight: 600; flex: none; overflow: hidden; }
 .pf-avatar svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; }
 .pf-avatar-upload { position: relative; padding: 0; border: 0; cursor: pointer; }
@@ -674,8 +675,7 @@ button.tm-row { cursor: pointer; }
 .pf-avatar-upload:hover .pf-avatar-overlay, .pf-avatar-upload:focus-visible .pf-avatar-overlay { opacity: 1; }
 .pf-avatar-upload:focus-visible { outline-offset: 2px; }
 .pf-name { margin: 0; font-size: 16px; font-weight: 600; }
-.pf-photo-actions { display: flex; flex-wrap: wrap; gap: 8px; }
-.pf-photo-actions [data-remove-photo] { margin-bottom: 16px; }
+.pf-remove-photo { margin-left: auto; flex: none; }
 
 @media (max-width: 560px) {
   .topnav { gap: 0; }
