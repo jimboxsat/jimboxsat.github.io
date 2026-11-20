@@ -12,7 +12,7 @@ function cselectHtml({ name = '', value = '', options, dots = false, id = '', ar
   const dotFor = v => (dots && v) ? `<i class="dot" style="background:${COLORS[v] || '#ccc'}"></i>` : '';
   const optHtml = o => {
     const on = o === cur;
-    return `<button type="button" role="option" class="cselect-opt${on ? ' selected' : ''}" data-value="${esc(o.value)}" aria-selected="${on}">${dotFor(o.value)}<span>${esc(t(o.label))}</span></button>`;
+    return `<button type="button" role="option" tabindex="-1" class="cselect-opt${on ? ' selected' : ''}" data-value="${esc(o.value)}" aria-selected="${on}">${dotFor(o.value)}<span>${esc(t(o.label))}</span></button>`;
   };
   const ariaAttr = aria ? ` aria-label="${esc(aria)}"` : '';
   return `<div class="cselect"${id ? ` id="${id}"` : ''} data-cselect>
@@ -48,14 +48,28 @@ function wireCselect(wrap, root, { onChange } = {}) {
       }
     }
   };
+  const openMenu = () => {
+    closeAll(wrap); menu.hidden = false; btn.setAttribute('aria-expanded', 'true');
+    (opts.find(o => o.getAttribute('aria-selected') === 'true') || opts[0])?.focus();
+  };
   btn.addEventListener('click', e => {
     e.stopPropagation();
     const willOpen = menu.hidden;
-    closeAll(wrap);
-    menu.hidden = !willOpen;
-    btn.setAttribute('aria-expanded', String(willOpen));
+    if (willOpen) openMenu();
+    else { menu.hidden = true; btn.setAttribute('aria-expanded', 'false'); }
   });
-  menu.addEventListener('click', e => { const li = e.target.closest('.cselect-opt'); if (li) { e.preventDefault(); apply(li, true); } });
+  btn.addEventListener('keydown', e => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); openMenu(); }
+  });
+  menu.addEventListener('keydown', e => {
+    const i = opts.indexOf(document.activeElement);
+    if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key)) {
+      e.preventDefault();
+      const next = e.key === 'Home' ? 0 : e.key === 'End' ? opts.length - 1 : (i + (e.key === 'ArrowDown' ? 1 : -1) + opts.length) % opts.length;
+      opts[next]?.focus();
+    } else if (e.key === 'Tab') { menu.hidden = true; btn.setAttribute('aria-expanded', 'false'); }
+  });
+  menu.addEventListener('click', e => { const li = e.target.closest('.cselect-opt'); if (li) { e.preventDefault(); apply(li, true); btn.focus(); } });
   return {
     el: wrap,
     get value() { return input.value; },
@@ -256,7 +270,7 @@ export function openItemEditor(existing = null, { onSaved, initialBlob = null } 
         state.previewUrl = URL.createObjectURL(b);
         preview.innerHTML = `<img src="${state.previewUrl}" alt="Preview of the garment">`;
         tools.hidden = false; renderStepPhoto();
-      } catch (e) { showErr('Could not render preview.'); }
+      } catch (e) { if (token === renderToken) showErr(e.message || 'Could not render preview.'); }
     } else {
       if (state.previewUrl) { URL.revokeObjectURL(state.previewUrl); state.previewUrl = ''; }
       const src = state.blob ? (state.previewUrl = URL.createObjectURL(state.blob)) : state.imageUrl;

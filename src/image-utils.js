@@ -64,7 +64,8 @@ export async function cutoutBackground(img, tol) {
   if (typeof img.decode === 'function') { try { await img.decode(); } catch { /* already decoded */ } }
   await nextFrame();
   let data;
-  try { data = ctx.getImageData(0, 0, w, h); } catch { return c; } // cross-origin image: leave untouched
+  try { data = ctx.getImageData(0, 0, w, h); }
+  catch { throw new Error('Could not remove the background. Try uploading the image from your device.'); }
   const d = data.data;
   let rs = 0, gs = 0, bs = 0, n = 0;
   const sample = (x, y) => { const i = (y * w + x) * 4; rs += d[i]; gs += d[i + 1]; bs += d[i + 2]; n++; };
@@ -87,7 +88,7 @@ export async function cutoutBackground(img, tol) {
     if (!mask[p]) continue;
     const i = p * 4;
     const dd = colorDist(d[i], d[i + 1], d[i + 2], br, bg, bb);
-    d[i + 3] = Math.round(Math.max(0, Math.min(1, (dd - soft) / soft)) * 255);
+    d[i + 3] = Math.round(d[i + 3] * Math.max(0, Math.min(1, (dd - soft) / soft)));
   }
   ctx.putImageData(data, 0, 0);
   return c;

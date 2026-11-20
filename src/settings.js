@@ -88,7 +88,7 @@ export function createSettings(root, { onRemoveDemo, onBack } = {}) {
           tr`<div class="inline-field"><input id="gclient" placeholder="Client ID…" value="${esc(gdrive.clientId())}" aria-label="Google client ID" autocomplete="off"><button class="btn" data-act="gsave">Save</button></div>`);
     root.innerHTML = tr`<div class="settings">
       <a class="back-link" href="#" data-act="leave">← Back</a>
-      <div class="page-head"><div><h1>Settings</h1><p class="muted">Everything stays privately on this device.</p></div></div>
+      <div class="page-head"><div><h1>Settings</h1><p class="muted">Your data is stored on this device unless you export or sync it.</p></div></div>
 
       <section class="s-card">${sTitle(sIco(icons.palette), t('Appearance'))}
         ${row(t('Theme'), t('Follow your device, or pick light or dark.'), radios('theme', theme, [['system', 'System'], ['light', 'Light'], ['dark', 'Dark']]))}
@@ -126,14 +126,14 @@ export function createSettings(root, { onRemoveDemo, onBack } = {}) {
 
       <section class="s-card">${sTitle(sIco(icons.cloud, icons.refresh), t('Cloud sync'))}
         ${driveRow}
-        <p class="muted small">Sync keeps your closet in a hidden app-data file inside your own Google Drive — nothing is sent to us. It merges this device with the Drive copy, most recent change winning, so you can move between different devices.</p>
+        <p class="muted small">${esc(lang() === 'en' ? 'Sync keeps your closet in a hidden app-data file inside your own Google Drive; nothing is sent to us. It merges this device with the Drive copy, most recent change winning, so you can move between different devices.' : t('Sync keeps your closet in a hidden app-data file inside your own Google Drive — nothing is sent to us. It merges this device with the Drive copy, most recent change winning, so you can move between different devices.'))}</p>
         <details><summary>How to get a Client ID</summary><p class="muted small">In Google Cloud Console, create a project, enable the “Google Drive API”, then create an OAuth client ID of type “Web application”. Under <em>Authorized JavaScript origins</em> add your site (e.g. http://localhost:8080 and your GitHub Pages URL). Paste the client ID above.</p></details>
       </section>
 
       <section class="s-card">${sTitle(sIco(icons.question), t('Help'))}
         <details><summary>Canvas controls</summary><p class="muted small">Drag a piece to move it and drag the round handle to resize. With a piece focused: arrow keys nudge (Shift for bigger steps), + and − resize, R rotates, [ and ] change layers, Delete removes. Pin a piece to keep it when you press Shuffle.</p></details>
         <details><summary>Dress me tips</summary><p class="muted small">Swipe a row, or press ← and → on it. The piece in the middle is the chosen one. Pin a row so the dice skips it. Color match works best when your items have colors.</p></details>
-        <details><summary>Adding items from the web</summary><p class="muted small">In the item form, choose Upload and paste or drop a screenshot of the item — it opens in the crop view. Search the web in a new tab, screenshot the item, and paste it here.</p></details>
+        <details><summary>Adding items from the web</summary><p class="muted small">${esc(lang() === 'en' ? 'In the item form, choose Upload and paste or drop a screenshot of the item. It opens in the crop view. Search the web in a new tab, screenshot the item, and paste it here.' : t('In the item form, choose Upload and paste or drop a screenshot of the item — it opens in the crop view. Search the web in a new tab, screenshot the item, and paste it here.'))}</p></details>
       </section>
 
       <section class="s-card">${sTitle(sIco(icons.info), t('About'))}
@@ -148,7 +148,7 @@ export function createSettings(root, { onRemoveDemo, onBack } = {}) {
         <div class="about-logo" aria-hidden="true">a</div>
         <h3>Atelier</h3><p class="muted">${esc(tf('Version {version}', { version: VERSION }))}</p>
         <p>A private digital closet and outfit builder. Add your clothes once, then mix and match them into outfits.</p>
-        <p class="muted small">No account. No tracking. Your photos and outfits never leave this device.</p>
+        <p class="muted small">Your photos and outfits are stored on this device. You can choose to export or sync them.</p>
         <p class="creator"><span class="muted">Created by</span> <strong>@jimboxsat</strong></p>
         <p class="muted small">Find me on all platforms under the same name.</p>
         <p class="vibe">vibe-coded with love <span aria-hidden="true">♥</span></p>

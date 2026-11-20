@@ -69,7 +69,17 @@ export function openModal({ title, body, className = '', onClose, closeOnBackdro
   const onKey = e => {
     const top = [...document.querySelectorAll('.modal-backdrop')].pop();
     if (top !== wrap) return;
-    if (e.key === 'Escape') { e.stopPropagation(); close(); }
+    if (e.key === 'Escape') {
+      const select = e.target.closest?.('[data-cselect]');
+      if (select && !select.querySelector('.cselect-menu').hidden) {
+        e.preventDefault(); e.stopPropagation();
+        select.querySelector('.cselect-menu').hidden = true;
+        const trigger = select.querySelector('.cselect-btn');
+        trigger.setAttribute('aria-expanded', 'false'); trigger.focus();
+        return;
+      }
+      e.stopPropagation(); close();
+    }
     if (e.key === 'Tab') {
       const f = $$('button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])', dlg).filter(x => !x.disabled && x.offsetParent !== null);
       if (!f.length) return;

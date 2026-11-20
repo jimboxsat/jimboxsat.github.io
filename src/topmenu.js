@@ -192,7 +192,7 @@ export function createTopMenu({ onSettings, onConnectDrive } = {}) {
         </div>
         <input id="pfPhoto" type="file" accept="image/*" hidden>
         <label class="field"><span>${esc(t('Your name'))}</span><input id="pfName" maxlength="30" value="${esc(name)}" placeholder="e.g. Alex" autocomplete="nickname"></label>
-        <p class="muted small">${esc(t('Used for the greeting on your home page. Everything stays on this device.'))}</p>
+        <p class="muted small">${esc(t('Your name is used for the greeting on your home page. Your profile can be included in backups and sync.'))}</p>
         <div class="form-actions"><button class="btn primary" data-save autofocus>${esc(t('Save'))}</button></div>`
     });
     const save = $('[data-save]', m.el), remove = $('[data-remove-photo]', m.el), input = $('#pfPhoto', m.el);
