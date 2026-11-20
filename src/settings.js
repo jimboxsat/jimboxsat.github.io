@@ -101,7 +101,7 @@ export function createSettings(root, { onRemoveDemo, onBack } = {}) {
         ${weatherOn ? row(t('Weather city'), t('Looked up with Open-Meteo for the forecast only.'), tr`<div class="inline-field"><input id="wcityIn" maxlength="80" placeholder="City name…" value="${esc(weatherCity ? weatherCity.label : '')}" aria-label="Weather city"><button class="btn" data-act="weatherCity">Save</button></div>`) : ''}
       </section>
 
-      <section class="s-card">${sTitle(sIco(icons.shirt, icons.sparkle, 'tr'), t('Outfit Builder'))}
+      <section class="s-card">${sTitle(sIco(icons.shirt), t('Outfit Builder'))}
         ${row(t('When I open it'), t('Show the two options each time, or jump straight into one.'), radios('startMode', startMode, [['ask', t('Ask me')], ['dress', t('Dress me')], ['canvas', t('Canvas')]]))}
         ${row(t('Dice mode'), t('How the dice picks pieces in Dress me.'), radios('dressMode', dice, [['random', t('Random')], ['color', t('Color match')]]))}
         ${row(t('Clothing order'), t('Choose how clothes are sorted in Dress me.'), `<select id="dressSort" aria-label="${esc(t('Clothing order'))}">${DRESS_SORTS.map(([value, label]) => `<option value="${value}" ${value === dressSort ? 'selected' : ''}>${esc(t(label))}</option>`).join('')}</select>`)}
